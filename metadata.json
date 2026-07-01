@@ -1,0 +1,6 @@
+{
+  "name": "Teranga Travel",
+  "description": "Plateforme numérique touristique de référence au Sénégal pour découvrir les destinations, réserver des séjours et explorer des circuits authentiques.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
