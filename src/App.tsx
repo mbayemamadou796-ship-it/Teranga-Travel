@@ -15,9 +15,13 @@ import MapMock from './components/MapMock';
 import AIPlanner from './components/AIPlanner';
 import ReviewSection from './components/ReviewSection';
 import BookingModal from './components/BookingModal';
+import AppHebergeurs from './components/AppHebergeurs';
+import AppCircuitsGuides from './components/AppCircuitsGuides';
+import AppAdmin from './components/AppAdmin';
 
 export default function App() {
   // Navigation & Routing State
+  const [activeApp, setActiveApp] = useState<'tourist' | 'hebergeurs' | 'circuits_guides' | 'admin'>('tourist');
   const [activeTab, setActiveTab] = useState<'destinations' | 'establishments' | 'ai-planner' | 'dashboard'>('destinations');
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
@@ -60,7 +64,7 @@ export default function App() {
   const [newEstName, setNewEstName] = useState('');
   const [newEstDesc, setNewEstDesc] = useState('');
   const [newEstLocation, setNewEstLocation] = useState<SenegalDestination>('Dakar');
-  const [newEstType, setNewEstType] = useState<'hotel' | 'campement' | 'maison_hotes' | 'agence'>('hotel');
+  const [newEstType, setNewEstType] = useState<'hotel' | 'campement' | 'maison_hotes' | 'agence' | 'guide'>('hotel');
   const [newEstAmenities, setNewEstAmenities] = useState<string[]>([]);
   const [newEstEmail, setNewEstEmail] = useState('');
   const [newEstPhone, setNewEstPhone] = useState('');
@@ -362,8 +366,66 @@ export default function App() {
         <div className="flex-1 bg-red-600" />
       </div>
 
+      {/* Ecosystem Portals Navigation Switcher */}
+      <div className="bg-slate-900 border-b border-slate-800 text-white py-3 px-4 z-50">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] bg-slate-800 text-slate-200 font-bold px-2.5 py-1 rounded-md uppercase tracking-wider border border-slate-700">
+              Écosystème Teranga Travel
+            </span>
+            <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">
+              Sélectionnez l'application web métier :
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            <button
+              onClick={() => setActiveApp('tourist')}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeApp === 'tourist'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+              }`}
+            >
+              <span>🌍 App Voyageur / Touriste</span>
+            </button>
+            <button
+              onClick={() => setActiveApp('hebergeurs')}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeApp === 'hebergeurs'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+              }`}
+            >
+              <span>🏨 App Hébergeurs</span>
+            </button>
+            <button
+              onClick={() => setActiveApp('circuits_guides')}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeApp === 'circuits_guides'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+              }`}
+            >
+              <span>🥾 App Circuits & Guides</span>
+            </button>
+            <button
+              onClick={() => setActiveApp('admin')}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeApp === 'admin'
+                  ? 'bg-slate-100 text-slate-900 shadow-sm'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+              }`}
+            >
+              <span>🛡️ App Administrateur</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Primary Header */}
-      <header className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-gray-100 z-40 transition-all">
+      {activeApp === 'tourist' && (
+        <header className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-gray-100 z-40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           
           {/* Logo */}
@@ -391,7 +453,7 @@ export default function App() {
             {[
               { id: 'destinations', label: 'Destinations', icon: Compass },
               { id: 'establishments', label: 'Hébergements', icon: Building },
-              { id: 'ai-planner', label: 'Circuits & Agences', icon: ClipboardList },
+              { id: 'ai-planner', label: 'Circuits & Guides', icon: ClipboardList },
               { id: 'dashboard', label: 'Mon Espace', icon: User }
             ].map((tab) => {
               const Icon = tab.icon;
@@ -489,11 +551,41 @@ export default function App() {
           })}
         </div>
       </header>
+      )}
 
       {/* Primary Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         
-        {/* ==================== TAB 1: DESTINATIONS ==================== */}
+        {activeApp === 'hebergeurs' && (
+          <AppHebergeurs 
+            currentUser={currentUser} 
+            establishments={establishments} 
+            onRefreshData={fetchEstablishments} 
+            onDirectLogin={handleDirectLogin}
+          />
+        )}
+
+        {activeApp === 'circuits_guides' && (
+          <AppCircuitsGuides 
+            currentUser={currentUser} 
+            establishments={establishments} 
+            onRefreshData={fetchEstablishments} 
+            onDirectLogin={handleDirectLogin}
+          />
+        )}
+
+        {activeApp === 'admin' && (
+          <AppAdmin 
+            currentUser={currentUser} 
+            establishments={establishments} 
+            onRefreshData={fetchEstablishments} 
+            onDirectLogin={handleDirectLogin}
+          />
+        )}
+
+        {activeApp === 'tourist' && (
+          <>
+            {/* ==================== TAB 1: DESTINATIONS ==================== */}
         {activeTab === 'destinations' && (
           <div id="tab-destinations" className="space-y-12">
             
@@ -848,13 +940,13 @@ export default function App() {
                           <RefreshCw className="animate-spin text-emerald-600" size={16} />
                           <span className="text-xs font-medium text-gray-500">Recherche des offres...</span>
                         </div>
-                      ) : selectedOffers.length === 0 ? (
+                      ) : selectedOffers.filter(o => (o.status || 'approved') === 'approved').length === 0 ? (
                         <div className="p-12 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200 text-xs text-gray-500">
-                          Aucune chambre ou offre enregistrée pour cet établissement pour le moment.
+                          Aucune chambre ou offre validée pour cet établissement pour le moment.
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          {selectedOffers.map((offer) => (
+                          {selectedOffers.filter(o => (o.status || 'approved') === 'approved').map((offer) => (
                             <div 
                               key={offer.id} 
                               className="bg-white p-5 rounded-2xl border border-gray-100 hover:border-emerald-100 transition-all shadow-xs flex flex-col sm:flex-row gap-5 items-start sm:items-center"
@@ -1115,6 +1207,11 @@ export default function App() {
                   setActiveTab('dashboard');
                   alert("Veuillez vous connecter pour faire une réservation.");
                   return;
+                }
+                // Find and pre-select the corresponding agency or guide establishment
+                const assocEst = establishments.find(e => e.id === offer.establishmentId);
+                if (assocEst) {
+                  setSelectedEstablishment(assocEst);
                 }
                 setBookingOffer(offer);
               }}
@@ -1460,7 +1557,7 @@ export default function App() {
                               </div>
 
                               <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Type d'établissement</label>
+                                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Type d'établissement / Profil</label>
                                 <select
                                   value={newEstType}
                                   onChange={(e) => setNewEstType(e.target.value as any)}
@@ -1469,6 +1566,8 @@ export default function App() {
                                   <option value="hotel">Hôtel</option>
                                   <option value="campement">Campement</option>
                                   <option value="maison_hotes">Maison d'hôtes</option>
+                                  <option value="agence">Agence de Voyage (Circuits)</option>
+                                  <option value="guide">Guide Touristique Local</option>
                                 </select>
                               </div>
                             </div>
@@ -1497,10 +1596,20 @@ export default function App() {
                             </div>
 
                             <div className="space-y-1">
-                              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Équipements (séparés par des virgules)</label>
+                              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">
+                                {newEstType === 'guide' 
+                                  ? 'Langues parlées & Spécialités' 
+                                  : newEstType === 'agence'
+                                  ? 'Logistique & Prestations proposées'
+                                  : 'Équipements & Services (séparés par des virgules)'}
+                              </label>
                               <input
                                 type="text"
-                                placeholder="Ex: Wi-Fi gratuit, Piscine, Énergie solaire, Climatisation"
+                                placeholder={newEstType === 'guide' 
+                                  ? 'Ex: Wolof, Français, Anglais, Histoire coloniale, Trekking' 
+                                  : newEstType === 'agence'
+                                  ? 'Ex: Transport 4x4, Guides certifiés, Matériel de surf, Pirogues privées'
+                                  : 'Ex: Wi-Fi gratuit, Piscine, Énergie solaire, Climatisation'}
                                 onChange={(e) => setNewEstAmenities(e.target.value.split(',').map(a => a.trim()).filter(a => a.length > 0))}
                                 className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2.5 rounded-xl text-xs text-gray-800"
                               />
@@ -1623,19 +1732,33 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Right part: Add Room form */}
+                        {/* Right part: Add Room / Tour / Guide service form */}
                         <div className="lg:col-span-4 bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs space-y-4">
                           <h3 className="font-sans font-bold text-base text-gray-900 border-b border-gray-100 pb-3">
-                            Créer une Offre / Chambre
+                            {proEstablishment?.type === 'agence' 
+                              ? 'Créer un Circuit Touristique' 
+                              : proEstablishment?.type === 'guide'
+                              ? 'Définir une Prestation de Guidage'
+                              : 'Créer une Offre / Chambre'}
                           </h3>
                           
                           <form onSubmit={handleCreateOffer} className="space-y-4">
                             <div className="space-y-1">
-                              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Nom de la Chambre / Offre</label>
+                              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                {proEstablishment?.type === 'agence'
+                                  ? 'Nom du Circuit'
+                                  : proEstablishment?.type === 'guide'
+                                  ? 'Intitulé de la Prestation'
+                                  : 'Nom de la Chambre / Offre'}
+                              </label>
                               <input
                                 type="text"
                                 required
-                                placeholder="Ex. Suite Royale avec Balcon"
+                                placeholder={proEstablishment?.type === 'agence'
+                                  ? 'Ex: Trek de la Cascade & Pays Bassari'
+                                  : proEstablishment?.type === 'guide'
+                                  ? "Ex: Accompagnement historique d'une journée"
+                                  : 'Ex. Suite Royale avec Balcon'}
                                 value={newOfferTitle}
                                 onChange={(e) => setNewOfferTitle(e.target.value)}
                                 className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800"
@@ -1649,14 +1772,24 @@ export default function App() {
                                 rows={3}
                                 value={newOfferDesc}
                                 onChange={(e) => setNewOfferDesc(e.target.value)}
-                                placeholder="Taille de la pièce, lits, vue, équipements de base..."
+                                placeholder={proEstablishment?.type === 'agence'
+                                  ? "Itinéraire détaillé, activités, arrêts notables et logistique..."
+                                  : proEstablishment?.type === 'guide'
+                                  ? "Contenu de l'accompagnement, thèmes abordés, conseils locaux..."
+                                  : 'Taille de la pièce, lits, vue, équipements de base...'}
                                 className="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-xs text-gray-800 resize-none"
                               />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Prix / nuit (FCFA)</label>
+                                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                  {proEstablishment?.type === 'agence'
+                                    ? 'Tarif par Voyageur'
+                                    : proEstablishment?.type === 'guide'
+                                    ? 'Tarif par Jour'
+                                    : 'Prix / nuit'} (FCFA)
+                                </label>
                                 <input
                                   type="number"
                                   required
@@ -1667,7 +1800,13 @@ export default function App() {
                               </div>
 
                               <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Capacité (personnes)</label>
+                                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                  {proEstablishment?.type === 'agence'
+                                    ? 'Groupe Max'
+                                    : proEstablishment?.type === 'guide'
+                                    ? 'Capacité Max'
+                                    : 'Capacité'} (pers.)
+                                </label>
                                 <input
                                   type="number"
                                   required
@@ -1679,10 +1818,20 @@ export default function App() {
                             </div>
 
                             <div className="space-y-1">
-                              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Services inclus (séparés par des virgules)</label>
+                              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">
+                                {proEstablishment?.type === 'agence'
+                                  ? 'Prestations incluses'
+                                  : proEstablishment?.type === 'guide'
+                                  ? 'Inclusions et langues parlées'
+                                  : 'Services inclus'} (séparés par des virgules)
+                              </label>
                               <input
                                 type="text"
-                                placeholder="Ex: Petit-déjeuner inclus, Wi-Fi gratuit, Climatisation"
+                                placeholder={proEstablishment?.type === 'agence'
+                                  ? 'Ex: Transport 4x4, Repas traditionnels, Droits d\'entrée'
+                                  : proEstablishment?.type === 'guide'
+                                  ? 'Ex: Visite en Wolof/Français/Anglais, Astuces locales'
+                                  : 'Ex: Petit-déjeuner inclus, Wi-Fi gratuit, Climatisation'}
                                 value={newOfferServices}
                                 onChange={(e) => setNewOfferServices(e.target.value)}
                                 className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800"
@@ -1693,7 +1842,11 @@ export default function App() {
                               type="submit"
                               className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer shadow-xs"
                             >
-                              Publier la chambre
+                              {proEstablishment?.type === 'agence'
+                                ? 'Publier le circuit'
+                                : proEstablishment?.type === 'guide'
+                                ? 'Enregistrer la prestation'
+                                : 'Publier la chambre'}
                             </button>
                           </form>
                         </div>
@@ -1792,6 +1945,8 @@ export default function App() {
             )}
 
           </div>
+        )}
+        </>
         )}
 
       </main>

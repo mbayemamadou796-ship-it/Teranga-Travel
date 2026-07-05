@@ -118,6 +118,30 @@ function loadDatabase(): DatabaseSchema {
       name: 'Ousmane Cissokho',
       role: 'professional',
       establishmentId: 'est_agence_5',
+    },
+    {
+      id: 'user_guide_dakar',
+      email: 'guide_dakar@teranga.sn',
+      password: 'guide',
+      name: 'Abdoulaye Ndiaye',
+      role: 'professional',
+      establishmentId: 'est_guide_1',
+    },
+    {
+      id: 'user_guide_saloum',
+      email: 'guide_saloum@teranga.sn',
+      password: 'guide',
+      name: 'Bamba Diouf',
+      role: 'professional',
+      establishmentId: 'est_guide_2',
+    },
+    {
+      id: 'user_guide_kedougou',
+      email: 'guide_kedougou@teranga.sn',
+      password: 'guide',
+      name: 'Samba Diallo',
+      role: 'professional',
+      establishmentId: 'est_guide_3',
     }
   ];
 
@@ -277,6 +301,33 @@ app.put('/api/establishments/:id/status', (req, res) => {
   res.json({ establishment: db.establishments[estIndex] });
 });
 
+// Update establishment details (Professional owners)
+app.put('/api/establishments/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, description, amenities, contactEmail, contactPhone, images } = req.body;
+  const db = loadDatabase();
+
+  const estIndex = db.establishments.findIndex(e => e.id === id);
+  if (estIndex === -1) {
+    return res.status(404).json({ error: 'Établissement non trouvé.' });
+  }
+
+  const est = db.establishments[estIndex];
+  if (name !== undefined) est.name = name;
+  if (description !== undefined) est.description = description;
+  if (amenities !== undefined) est.amenities = amenities;
+  if (contactEmail !== undefined) est.contactEmail = contactEmail;
+  if (contactPhone !== undefined) est.contactPhone = contactPhone;
+  if (images !== undefined) est.images = images;
+
+  // Reverting to pending state upon modification? The prompt says "L'hébergeur reçoit la raison du refus. Il peut corriger son offre puis la republier."
+  // Wait, if an establishment is modified, we could optionally reset status to 'pending' or keep it. Let's reset it to pending to trigger re-validation if they corrected it!
+  est.status = 'pending';
+
+  saveDatabase(db);
+  res.json({ establishment: est });
+});
+
 // 4. Offers/Rooms API
 app.get('/api/offers', (req, res) => {
   const db = loadDatabase();
@@ -305,11 +356,63 @@ app.post('/api/establishments/:id/offers', (req, res) => {
     services: services || [],
     images: images && images.length > 0 ? images : ['https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'],
     availableQuantity: Number(availableQuantity) || 1,
+    status: 'pending', // Starts pending, needs admin approval
+    rejectionReason: '',
   };
 
   db.offers.push(newOffer);
   saveDatabase(db);
   res.status(201).json(newOffer);
+});
+
+// Update offer validation status (Admin only)
+app.put('/api/offers/:id/status', (req, res) => {
+  const { id } = req.params;
+  const { status, rejectionReason } = req.body; // 'approved' | 'rejected'
+  const db = loadDatabase();
+
+  const offerIndex = db.offers.findIndex(o => o.id === id);
+  if (offerIndex === -1) {
+    return res.status(404).json({ error: 'Offre non trouvée.' });
+  }
+
+  db.offers[offerIndex].status = status;
+  if (status === 'rejected') {
+    db.offers[offerIndex].rejectionReason = rejectionReason || 'Qualité du contenu insuffisante ou informations incomplètes.';
+  } else {
+    db.offers[offerIndex].rejectionReason = '';
+  }
+
+  saveDatabase(db);
+  res.json({ offer: db.offers[offerIndex] });
+});
+
+// Update offer details (Professional owners)
+app.put('/api/offers/:id', (req, res) => {
+  const { id } = req.params;
+  const { title, description, price, capacity, services, availableQuantity, images } = req.body;
+  const db = loadDatabase();
+
+  const offerIndex = db.offers.findIndex(o => o.id === id);
+  if (offerIndex === -1) {
+    return res.status(404).json({ error: 'Offre non trouvée.' });
+  }
+
+  const offer = db.offers[offerIndex];
+  if (title !== undefined) offer.title = title;
+  if (description !== undefined) offer.description = description;
+  if (price !== undefined) offer.price = Number(price);
+  if (capacity !== undefined) offer.capacity = Number(capacity);
+  if (services !== undefined) offer.services = services;
+  if (availableQuantity !== undefined) offer.availableQuantity = Number(availableQuantity);
+  if (images !== undefined) offer.images = images;
+
+  // Resubmit for approval upon modification
+  offer.status = 'pending';
+  offer.rejectionReason = '';
+
+  saveDatabase(db);
+  res.json(offer);
 });
 
 // 5. Bookings API

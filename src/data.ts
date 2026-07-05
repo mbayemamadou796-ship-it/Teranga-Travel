@@ -374,6 +374,48 @@ export const INITIAL_ESTABLISHMENTS: Establishment[] = [
     amenities: ['Guides de montagne', 'Sacs et bâtons de marche', 'Logistique camp de brousse', 'Véhicule tout-terrain de safari', 'Porteurs locaux'],
     contactEmail: 'contact@kedougou-trekking.sn',
     contactPhone: '+221 77 565 65 65'
+  },
+  {
+    id: 'est_guide_1',
+    name: 'Abdoulaye Ndiaye (Guide)',
+    description: 'Guide touristique certifié spécialisé dans l\'histoire de l\'île de Gorée, la presqu\'île du Cap-Vert et de Dakar. Parlant Wolof, Français et Anglais.',
+    location: 'Dakar',
+    type: 'guide',
+    ownerId: 'user_guide_dakar',
+    status: 'approved',
+    images: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80'],
+    rating: 4.9,
+    amenities: ['Histoire coloniale', 'Langues: Wolof, Fr, En', 'Traversées en pirogue', 'Contes traditionnels', 'Accompagnement VIP'],
+    contactEmail: 'abdou.goree@gmail.com',
+    contactPhone: '+221 77 654 32 10'
+  },
+  {
+    id: 'est_guide_2',
+    name: 'Bamba Diouf (Guide)',
+    description: 'Guide écotouristique local du Sine Saloum. Spécialiste de la réserve d\'oiseaux du Djoudj et de la faune des bolongs du delta.',
+    location: 'Sine Saloum',
+    type: 'guide',
+    ownerId: 'user_guide_saloum',
+    status: 'approved',
+    images: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80'],
+    rating: 4.8,
+    amenities: ['Ornithologie', 'Langues: Wolof, Fr, Es', 'Pêche traditionnelle', 'Visite des villages insulaires'],
+    contactEmail: 'bamba.saloum@gmail.com',
+    contactPhone: '+221 78 456 12 34'
+  },
+  {
+    id: 'est_guide_3',
+    name: 'Samba Diallo (Guide)',
+    description: 'Guide stagiaire proposant des balades pédestres de découverte à travers la brousse et les collines de Kédougou. En attente de validation.',
+    location: 'Kédougou',
+    type: 'guide',
+    ownerId: 'user_guide_kedougou',
+    status: 'pending',
+    images: ['https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80'],
+    rating: 0.0,
+    amenities: ['Randonnée locale', 'Langues: Poular, Fr', 'Flore locale'],
+    contactEmail: 'samba.ked@gmail.com',
+    contactPhone: '+221 76 987 65 43'
   }
 ];
 
@@ -540,6 +582,29 @@ export const INITIAL_OFFERS: Offer[] = [
     services: ['Guide de trekking certifié', 'Bâtons de randonnée', 'Repas Mafé sous les fromagers', 'Frais d\'accès aux villages', 'Assurance assistance'],
     images: ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80'],
     availableQuantity: 15
+  },
+  // Guide Daily Rates (Offers)
+  {
+    id: 'off_g1_1',
+    establishmentId: 'est_guide_1',
+    title: 'Accompagnement historique à Gorée & Dakar',
+    description: 'Une journée entière en ma compagnie pour une visite commentée riche en émotions de l\'île historique de Gorée, de la Maison des Esclaves et des plus beaux recoins cachés de la capitale.',
+    price: 15000,
+    capacity: 8,
+    services: ['Commentaire historique complet', 'Traduction Wolof-Français-Anglais', 'Négociations locales facilitées'],
+    images: ['https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=600&q=80'],
+    availableQuantity: 1
+  },
+  {
+    id: 'off_g2_1',
+    establishmentId: 'est_guide_2',
+    title: 'Journée d\'excursion pirogue & oiseaux du Saloum',
+    description: 'Accompagnement guidé pour repérer les plus rares oiseaux dans les mangroves du fleuve et faire escale pour un thé chez l\'habitant sur les îles du delta.',
+    price: 18000,
+    capacity: 5,
+    services: ['Repérage ornithologique pro', 'Escale villageoise authentique', 'Conseils d\'éco-tourisme'],
+    images: ['https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=600&q=80'],
+    availableQuantity: 1
   }
 ];
 

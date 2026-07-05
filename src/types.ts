@@ -33,7 +33,7 @@ export interface Destination {
   specialties?: string[];
 }
 
-export type EstablishmentType = 'hotel' | 'campement' | 'maison_hotes' | 'agence';
+export type EstablishmentType = 'hotel' | 'campement' | 'maison_hotes' | 'agence' | 'guide';
 
 export type EstablishmentStatus = 'pending' | 'approved' | 'rejected';
 
@@ -52,6 +52,8 @@ export interface Establishment {
   contactPhone?: string;
 }
 
+export type OfferStatus = 'pending' | 'approved' | 'rejected';
+
 export interface Offer {
   id: string;
   establishmentId: string;
@@ -62,6 +64,8 @@ export interface Offer {
   services: string[];
   images: string[];
   availableQuantity: number;
+  status?: OfferStatus;
+  rejectionReason?: string;
 }
 
 export type BookingStatus = 'pending' | 'approved' | 'rejected';
