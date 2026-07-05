@@ -31,29 +31,57 @@ export default function BookingModal({ offer, establishment, touristId, onClose,
   const [bookingSuccess, setBookingSuccess] = useState<Booking | null>(null);
 
   // Dynamic calculations
-  const [days, setDays] = useState(3);
-  const [totalPrice, setTotalPrice] = useState(offer.price * 3);
+  const [days, setDays] = useState(1);
+  const [totalPrice, setTotalPrice] = useState(offer.price);
+
+  const isAgency = establishment.type === 'agence';
+  const isGuide = establishment.type === 'guide';
+  const isAccommodation = !isAgency && !isGuide;
 
   useEffect(() => {
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setDays(diffDays);
-      setTotalPrice(offer.price * diffDays);
-      setError(null);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      if (end >= start) {
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+        setDays(diffDays);
+        
+        if (isAgency) {
+          // Agency: Price is per traveler
+          setTotalPrice(offer.price * guestsCount);
+          setError(null);
+        } else if (isGuide) {
+          // Guide: Price is per day of guide
+          setTotalPrice(offer.price * diffDays);
+          setError(null);
+        } else {
+          // Accommodation: Price is per night (requires end > start)
+          if (end.getTime() === start.getTime()) {
+            setDays(0);
+            setTotalPrice(0);
+            setError('Pour un hébergement, la date de départ doit être au moins le lendemain de l\'arrivée.');
+          } else {
+            setTotalPrice(offer.price * diffDays);
+            setError(null);
+          }
+        }
+      } else {
+        setDays(0);
+        setTotalPrice(0);
+        setError('La date de départ/fin doit être après ou égale à la date d\'arrivée/début.');
+      }
     } else {
       setDays(0);
       setTotalPrice(0);
-      setError('La date de départ doit être après la date d\'arrivée.');
+      setError('Sélectionnez des dates valides.');
     }
-  }, [checkIn, checkOut, offer.price]);
+  }, [checkIn, checkOut, offer.price, guestsCount, isAgency, isGuide, isAccommodation]);
 
   const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (days <= 0) {
-      setError('Sélectionnez un intervalle de dates valide.');
+    if (isAccommodation && days <= 0) {
+      setError('Sélectionnez un intervalle de dates valide (au moins 1 nuit).');
       return;
     }
     if (guestsCount > offer.capacity) {
@@ -120,13 +148,13 @@ export default function BookingModal({ offer, establishment, touristId, onClose,
             </div>
             <h4 className="font-sans font-bold text-gray-900 text-lg">Demande de réservation envoyée !</h4>
             <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 text-xs text-gray-700 max-w-sm space-y-2 text-left">
-              <p><b>Hébergement :</b> {establishment.name}</p>
+              <p><b>Acteur :</b> {establishment.name}</p>
               <p><b>Offre :</b> {offer.title}</p>
-              <p><b>Dates :</b> {checkIn} au {checkOut} ({days} nuits)</p>
+              <p><b>Dates :</b> {checkIn} au {checkOut} {isAccommodation ? `(${days} nuits)` : `(${days} jours)`}</p>
               <p><b>Montant total estimé :</b> {totalPrice.toLocaleString('fr-FR')} FCFA</p>
             </div>
             <p className="text-xs text-gray-500 italic">
-              L'établissement va examiner vos dates sous peu. Vous pouvez suivre le statut dans votre Espace Voyageur.
+              L'établissement ou le professionnel va examiner vos dates sous peu. Vous pouvez suivre le statut dans votre Espace Voyageur.
             </p>
           </div>
         ) : (
@@ -152,7 +180,7 @@ export default function BookingModal({ offer, establishment, touristId, onClose,
                 <h4 className="font-sans font-bold text-xs text-gray-900">{offer.title}</h4>
                 <p className="text-[10px] text-gray-500 font-medium">{establishment.name}</p>
                 <p className="text-[11px] font-bold text-emerald-700 font-mono mt-0.5">
-                  {offer.price.toLocaleString('fr-FR')} FCFA <span className="text-[9px] text-gray-400 font-normal">/ nuit</span>
+                  {offer.price.toLocaleString('fr-FR')} FCFA <span className="text-[9px] text-gray-400 font-normal">{isAgency ? '/ voyageur' : isGuide ? '/ jour' : '/ nuit'}</span>
                 </p>
               </div>
             </div>
@@ -160,7 +188,7 @@ export default function BookingModal({ offer, establishment, touristId, onClose,
             {/* Check-In Date */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                <Calendar size={13} className="text-gray-400" /> Date d'Arrivée
+                <Calendar size={13} className="text-gray-400" /> {isAccommodation ? "Date d'Arrivée" : "Date de Début / Départ"}
               </label>
               <input
                 type="date"
@@ -175,7 +203,7 @@ export default function BookingModal({ offer, establishment, touristId, onClose,
             {/* Check-Out Date */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                <Calendar size={13} className="text-gray-400" /> Date de Départ
+                <Calendar size={13} className="text-gray-400" /> {isAccommodation ? "Date de Départ" : "Date de Fin / Retour"}
               </label>
               <input
                 type="date"
@@ -210,7 +238,13 @@ export default function BookingModal({ offer, establishment, touristId, onClose,
             {days > 0 && (
               <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100 space-y-2">
                 <div className="flex justify-between text-xs text-amber-900">
-                  <span>Calcul : {offer.price.toLocaleString('fr-FR')} FCFA × {days} nuits</span>
+                  {isAgency ? (
+                    <span>Calcul : {offer.price.toLocaleString('fr-FR')} FCFA × {guestsCount} voyageur(s)</span>
+                  ) : isGuide ? (
+                    <span>Calcul : {offer.price.toLocaleString('fr-FR')} FCFA × {days} jour(s)</span>
+                  ) : (
+                    <span>Calcul : {offer.price.toLocaleString('fr-FR')} FCFA × {days} nuit(s)</span>
+                  )}
                   <span className="font-mono font-medium">{totalPrice.toLocaleString('fr-FR')} FCFA</span>
                 </div>
                 <div className="border-t border-amber-200 pt-2 flex justify-between text-sm font-bold text-amber-950">
@@ -224,13 +258,16 @@ export default function BookingModal({ offer, establishment, touristId, onClose,
             <div className="flex gap-2 text-[10px] text-gray-500 bg-gray-50 px-3 py-2.5 rounded-xl">
               <ShieldCheck className="text-emerald-600 shrink-0 mt-0.5" size={14} />
               <span>
-                Paiement direct à l'établissement lors de votre arrivée. Aucun frais de réservation n'est prélevé à l'avance sur Teranga Travel.
+                {isAccommodation 
+                  ? "Paiement direct à l'établissement lors de votre arrivée. Aucun frais de réservation n'est prélevé à l'avance."
+                  : "Réservation sans prépaiement obligatoire. Le règlement s'effectue en direct avec l'agence ou le guide."
+                }
               </span>
             </div>
 
             <button
               type="submit"
-              disabled={loading || days <= 0}
+              disabled={loading || (isAccommodation && days <= 0)}
               className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold py-3 px-6 rounded-2xl text-xs transition-all cursor-pointer shadow-md disabled:opacity-50"
             >
               {loading ? 'Réservation en cours...' : 'Confirmer la Réservation'}

@@ -6,9 +6,126 @@
 import { useState, useEffect } from 'react';
 import { 
   Calendar, Compass, DollarSign, Users, Check, MapPin, Search, Phone, Mail, 
-  Star, Clock, ShieldCheck, Heart, ArrowRight, RefreshCw, ClipboardList, Eye, Award, Languages
+  Star, Clock, ShieldCheck, Heart, ArrowRight, RefreshCw, ClipboardList, Eye, Award, Languages, X, CheckCircle
 } from 'lucide-react';
 import { SenegalDestination, Establishment, Offer } from '../types';
+
+export interface ProgramDay {
+  day: number;
+  title: string;
+  description: string;
+}
+
+export interface StandardizedCircuitDetails {
+  id: string;
+  duration: string;
+  level: 'Standard' | 'Aventure' | 'Luxe';
+  type: 'Privé' | 'Groupe' | 'Flexible';
+  destinations: string[];
+  inclusions: string[];
+  exclusions: string[];
+  program: ProgramDay[];
+}
+
+export const STANDARDIZED_CIRCUITS_DATA: Record<string, StandardizedCircuitDetails> = {
+  'off_ag1_1': {
+    id: 'off_ag1_1',
+    duration: '1 journée',
+    level: 'Standard',
+    type: 'Groupe',
+    destinations: ['Dakar', 'Île de Gorée', 'Les Almadies'],
+    inclusions: ['Billet chaloupe aller-retour', 'Guide historien certifié', 'Déjeuner traditionnel & jus locaux', 'Entrées aux monuments (Maison des Esclaves, Renaissance)', 'Transport privé climatisé'],
+    exclusions: ['Boissons supplémentaires', 'Dépenses personnelles', 'Pourboires'],
+    program: [
+      { day: 1, title: 'Histoire émouvante de Gorée & Vibrations Dakaroises', description: 'Embarquez à 9h de la gare maritime pour Gorée. Visite guidée passionnante de la Maison des Esclaves et des ruelles coloniales. Déjeuner de Thiéboudienne face à l\'océan. Après-midi : visite du Monument de la Renaissance Africaine, puis coucher de soleil magique sur la pointe des Almadies.' }
+    ]
+  },
+  'off_ag1_2': {
+    id: 'off_ag1_2',
+    duration: '1 journée',
+    level: 'Aventure',
+    type: 'Groupe',
+    destinations: ['Dakar (Plages des Almadies)', 'Île de Ngor'],
+    inclusions: ['Planche de surf premium & combinaison', 'Moniteur de surf certifié', 'Pirogues aller-retour pour l\'île de Ngor', 'Snack local bio', 'Photos souvenirs de la session'],
+    exclusions: ['Déjeuner complet', 'Assurance personnelle'],
+    program: [
+      { day: 1, title: 'Vagues de l\'Atlantique & Cocon Artistique de Ngor', description: 'Matinée d\'initiation ou de perfectionnement au surf sur les meilleurs spots des Almadies sous l\'œil de nos moniteurs experts. Après-midi : traversée calme vers l\'île de Ngor. Exploration des galeries d\'art à ciel ouvert, détente et baignade dans la crique tranquille.' }
+    ]
+  },
+  'off_ag2_1': {
+    id: 'off_ag2_1',
+    duration: '1 journée',
+    level: 'Standard',
+    type: 'Flexible',
+    destinations: ['Delta du Sine Saloum', 'Joal-Fadiouth', 'Baobab de Fadial'],
+    inclusions: ['Pirogue traditionnelle à rames de bois', 'Guide écotouristique agréé', 'Prêt de jumelles ornithologiques', 'Déjeuner grillades de poissons pêchés le matin', 'Pot de miel de mangrove sauvage offert'],
+    exclusions: ['Navettes routières depuis Dakar', 'Pourboires pour le piroguier'],
+    program: [
+      { day: 1, title: 'Pénétration Silencieuse du Delta & Île aux Coquillages', description: 'Glissez sans bruit à l\'aube dans les bolongs ombragés par les palétuviers. Observation des hérons et pélicans. Escale pique-nique sur une lagune sauvage. L\'après-midi, visite à pied de l\'île mixte Joal-Fadiouth (bâtie sur des coquillages) et de l\'incroyable Baobab de Fadial.' }
+    ]
+  },
+  'off_ag3_1': {
+    id: 'off_ag3_1',
+    duration: '2 jours / 1 nuit',
+    level: 'Aventure',
+    type: 'Privé',
+    destinations: ['Casamance verte', 'Enampore', 'Oussouye'],
+    inclusions: ['VTT tout-terrain récents fournis', 'Hébergement authentique en case à impluvium d\'Enampore', 'Tous les repas inclus (dont Caldou traditionnel)', 'Cérémonie d\'accueil villageoise', 'Dégustation de vin de palme fraîchement récolté'],
+    exclusions: ['Vol ou bateau pour Ziguinchor', 'Achats d\'artisanat local'],
+    program: [
+      { day: 1, title: 'Randonnée Cycliste & Architecture Diola', description: 'Départ en VTT à travers les pistes ocre bordées de fromagers géants et de rizières. Arrivée à Enampore et installation dans la mythique case à impluvium. Repas traditionnel au feu de bois et soirée de contes locaux.' },
+      { day: 2, title: 'Rencontre Royale à Oussouye', description: 'Poursuite de la balade à vélo vers le village d\'Oussouye. Rencontre d\'échange unique et respectueuse avec le Roi d\'Oussouye pour appréhender les valeurs de paix et d\'harmonie communautaire de la culture Diola.' }
+    ]
+  },
+  'off_ag4_1': {
+    id: 'off_ag4_1',
+    duration: '1 journée',
+    level: 'Standard',
+    type: 'Groupe',
+    destinations: ['Saint-Louis', 'Parc National des Oiseaux du Djoudj'],
+    inclusions: ['Transport routier en 4x4 climatisé', 'Excursion privée en pirogue motorisée au Djoudj', 'Droits d\'entrée du parc national', 'Visite de l\'île coloniale de Ndar en calèche', 'Boisson de bienvenue au Bissap'],
+    exclusions: ['Déjeuner', 'Dépenses personnelles'],
+    program: [
+      { day: 1, title: 'Spectacle Aérien au Djoudj & Nostalgie de Ndar', description: 'Départ matinal pour le Djoudj (3e réserve ornithologique mondiale). Navigation incroyable au milieu de millions de pélicans et flamants roses en halte migratoire. L\'après-midi, retour à Saint-Louis pour une balade paisible en calèche coloniale.' }
+    ]
+  },
+  'off_ag5_1': {
+    id: 'off_ag5_1',
+    duration: '2 jours / 1 nuit',
+    level: 'Aventure',
+    type: 'Privé',
+    destinations: ['Kédougou', 'Ibel (Village Bédik)', 'Bandafassi', 'Cascade de Dindéfélo'],
+    inclusions: ['Accompagnement de notre guide de montagne certifié', 'Bâtons et sacs de randonnée', 'Repas chaud traditionnel Mafé d\'arachide', 'Frais d\'accès aux villages coutumiers', 'Assurance rapatriement locale'],
+    exclusions: ['Trajet Dakar-Kédougou', 'Sac de couchage personnel'],
+    program: [
+      { day: 1, title: 'Ascension vers les Sommets et Traditions Bédiks', description: 'Randonnée escarpée mais grandiose depuis Ibel à travers des paysages de latérite pour monter au village suspendu de Bandafassi. Échange avec les doyens bédiks sur leurs croyances animistes. Nuit en cases d\'hôtes traditionnelles.' },
+      { day: 2, title: 'Le Bain Sacré de la Cascade de Dindéfélo', description: 'Marche d\'approche matinale sous une voûte forestière tropicale jusqu\'à la piscine naturelle de la cascade de Dindéfélo. Baignade revigorante et rafraîchissante sous la chute d\'eau de 100m, suivie d\'un repas de brousse.' }
+    ]
+  }
+};
+
+export function getCircuitDetails(offer: Offer): StandardizedCircuitDetails {
+  if (STANDARDIZED_CIRCUITS_DATA[offer.id]) {
+    return STANDARDIZED_CIRCUITS_DATA[offer.id];
+  }
+  
+  // Dynamic generation as fallback
+  const isTrek = offer.title.toLowerCase().includes('trek') || offer.title.toLowerCase().includes('rando') || offer.title.toLowerCase().includes('randonnée');
+  const isLuxe = offer.price > 70000;
+  
+  return {
+    id: offer.id,
+    duration: isTrek ? '2 jours / 1 nuit' : '1 journée',
+    level: isLuxe ? 'Luxe' : isTrek ? 'Aventure' : 'Standard',
+    type: 'Flexible',
+    destinations: ['Sénégal'],
+    inclusions: offer.services && offer.services.length > 0 ? offer.services : ['Accompagnement guidé', 'Transport local certifié'],
+    exclusions: ['Boissons alcoolisées', 'Dépenses personnelles', 'Pourboires'],
+    program: [
+      { day: 1, title: `Exploration Guidée : ${offer.title}`, description: offer.description }
+    ]
+  };
+}
 
 interface AIPlannerProps {
   onSearchEstablishment: (location: SenegalDestination) => void;
@@ -33,6 +150,11 @@ export default function AIPlanner({
   const [selectedTheme, setSelectedTheme] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<number>(60000);
+  
+  // Details Modal and Comparer State
+  const [selectedCircuitForDetails, setSelectedCircuitForDetails] = useState<Offer | null>(null);
+  const [comparisonList, setComparisonList] = useState<string[]>([]);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState<boolean>(false);
   
   // Data States
   const [allOffers, setAllOffers] = useState<Offer[]>([]);
@@ -448,7 +570,44 @@ export default function AIPlanner({
                             </div>
                           </div>
 
-                          <div className="flex gap-2 w-full sm:w-auto">
+                          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                            {/* Program view button */}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCircuitForDetails(offer)}
+                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-2 rounded-xl border border-emerald-100 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+                              title="Voir le programme détaillé"
+                            >
+                              <ClipboardList size={13} />
+                              <span>Programme</span>
+                            </button>
+
+                            {/* Comparison checkbox-style button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const id = offer.id;
+                                setComparisonList(prev => {
+                                  if (prev.includes(id)) {
+                                    return prev.filter(item => item !== id);
+                                  }
+                                  if (prev.length >= 3) {
+                                    alert("Vous pouvez comparer jusqu'à 3 circuits en même temps.");
+                                    return prev;
+                                  }
+                                  return [...prev, id];
+                                });
+                              }}
+                              className={`text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1 shrink-0 border cursor-pointer ${
+                                comparisonList.includes(offer.id)
+                                  ? 'bg-amber-100 border-amber-200 text-amber-800'
+                                  : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-500'
+                              }`}
+                              title="Ajouter au comparateur"
+                            >
+                              <span>{comparisonList.includes(offer.id) ? '✓ Comparé' : '+ Comparer'}</span>
+                            </button>
+
                             {/* Map view button */}
                             <button
                               type="button"
@@ -472,7 +631,7 @@ export default function AIPlanner({
                               }}
                               className="flex-1 sm:flex-initial bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold px-4 py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                             >
-                              <span>Réserver ce circuit</span>
+                              <span>Réserver</span>
                               <ArrowRight size={13} />
                             </button>
                           </div>
@@ -647,6 +806,329 @@ export default function AIPlanner({
         </div>
 
       </div>
+
+      {/* ==================== BOTTOM FLOATING COMPARATOR BAR ==================== */}
+      {comparisonList.length > 0 && (
+        <div id="floating-comparison-bar" className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-md text-white px-6 py-4 rounded-3xl border border-gray-800 shadow-2xl flex items-center gap-6 z-40 animate-slide-up max-w-[90vw] md:max-w-xl">
+          <div className="flex-1 space-y-1">
+            <h4 className="font-sans font-bold text-xs flex items-center gap-1.5 text-amber-400">
+              <Compass size={14} className="animate-spin [animation-duration:15s]" />
+              Comparateur de Circuits
+            </h4>
+            <p className="text-[10px] text-gray-300 font-medium">
+              {comparisonList.length === 1 
+                ? "Sélectionnez encore 1 ou 2 circuits pour comparer" 
+                : `${comparisonList.length} circuits sélectionnés pour comparaison`
+              }
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsComparisonModalOpen(true)}
+              disabled={comparisonList.length < 2}
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:hover:bg-emerald-600 text-white font-sans font-bold text-[11px] px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
+            >
+              Comparer ({comparisonList.length})
+            </button>
+            <button
+              onClick={() => setComparisonList([])}
+              className="p-2 hover:bg-gray-800 rounded-full text-gray-400 hover:text-white transition-all cursor-pointer"
+              title="Vider la sélection"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== CIRCUIT DETAIL ITINERARY MODAL ==================== */}
+      {selectedCircuitForDetails && (() => {
+        const details = getCircuitDetails(selectedCircuitForDetails);
+        const agency = partnerAgencies.find(a => a.id === selectedCircuitForDetails.establishmentId);
+        return (
+          <div id="circuit-details-modal-backdrop" className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-3xl max-w-2xl w-full border border-gray-100 shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+              {/* Header Banner */}
+              <div className="p-6 bg-radial from-emerald-800 to-emerald-900 text-white relative shrink-0">
+                <button
+                  onClick={() => setSelectedCircuitForDetails(null)}
+                  className="absolute top-4 right-4 p-1.5 hover:bg-emerald-700/50 rounded-full text-white transition-all cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-400 bg-amber-950/40 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                  Standard de Voyage Teranga
+                </span>
+                <h3 className="font-sans font-bold text-lg md:text-xl leading-tight mt-3">
+                  {selectedCircuitForDetails.title}
+                </h3>
+                <p className="text-[11px] text-emerald-200 mt-1 flex items-center gap-1 font-medium">
+                  <MapPin size={11} /> Proposé par {agency?.name} • Région {agency?.location}
+                </p>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+                {/* Circuit Highlights Metas */}
+                <div className="grid grid-cols-3 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="text-center space-y-0.5">
+                    <span className="text-gray-400 font-sans font-bold uppercase text-[9px] block">Durée</span>
+                    <span className="font-sans font-bold text-gray-800 text-xs flex items-center justify-center gap-1">
+                      <Clock size={12} className="text-emerald-700" /> {details.duration}
+                    </span>
+                  </div>
+                  <div className="text-center space-y-0.5 border-x border-gray-200/60">
+                    <span className="text-gray-400 font-sans font-bold uppercase text-[9px] block">Niveau</span>
+                    <span className="font-sans font-bold text-gray-800 text-xs flex items-center justify-center gap-1">
+                      <Compass size={12} className="text-emerald-700" /> {details.level}
+                    </span>
+                  </div>
+                  <div className="text-center space-y-0.5">
+                    <span className="text-gray-400 font-sans font-bold uppercase text-[9px] block">Formule</span>
+                    <span className="font-sans font-bold text-gray-800 text-xs flex items-center justify-center gap-1">
+                      <Users size={12} className="text-emerald-700" /> {details.type}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Destinations & Storytelling */}
+                <div className="space-y-2">
+                  <h4 className="font-sans font-bold text-gray-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5 text-emerald-800">
+                    📍 Itinéraire & Lieux Clés
+                  </h4>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {details.destinations.map((dest, i) => (
+                      <span key={i} className="bg-emerald-50 text-emerald-800 font-sans font-bold text-xs px-3 py-1 rounded-xl border border-emerald-100">
+                        {dest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Day-by-Day Program (Standardized) */}
+                <div className="space-y-3">
+                  <h4 className="font-sans font-bold text-gray-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5 text-emerald-800">
+                    📋 Programme Jour par Jour
+                  </h4>
+                  <div className="space-y-4 border-l border-emerald-100 pl-4 ml-2 pt-2">
+                    {details.program.map((prog, i) => (
+                      <div key={i} className="relative space-y-1">
+                        <span className="absolute -left-[24px] top-0 w-4.5 h-4.5 bg-emerald-700 text-white font-mono font-bold text-[9px] rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                          {prog.day}
+                        </span>
+                        <h5 className="font-sans font-bold text-gray-900 text-xs">{prog.title}</h5>
+                        <p className="text-gray-500 leading-relaxed text-xs">{prog.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Inclusions & Exclusions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100/50 space-y-2">
+                    <h5 className="font-sans font-bold text-emerald-800 text-[10px] uppercase tracking-wider flex items-center gap-1">
+                      ✓ Sont Inclus (Compris)
+                    </h5>
+                    <ul className="space-y-1 text-gray-600 font-medium list-disc pl-4 text-xs">
+                      {details.inclusions.map((inc, i) => <li key={i}>{inc}</li>)}
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
+                    <h5 className="font-sans font-bold text-gray-500 text-[10px] uppercase tracking-wider flex items-center gap-1">
+                      ✗ Sont Exclus (À votre charge)
+                    </h5>
+                    <ul className="space-y-1 text-gray-500 font-medium list-disc pl-4 text-xs">
+                      {details.exclusions.map((exc, i) => <li key={i}>{exc}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer pricing and call to action */}
+              <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-4 shrink-0">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] text-gray-400 font-semibold block">Tarif tout compris</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-mono font-bold text-lg text-emerald-700">
+                      {selectedCircuitForDetails.price.toLocaleString('fr-FR')}
+                    </span>
+                    <span className="text-xs font-bold text-emerald-700">FCFA</span>
+                    <span className="text-[10px] text-gray-400 font-semibold">/ voyageur</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedCircuitForDetails(null)}
+                    className="bg-white hover:bg-gray-100 text-gray-600 font-sans font-bold px-4 py-2 rounded-xl text-xs border border-gray-200 transition-all cursor-pointer"
+                  >
+                    Fermer
+                  </button>
+                  <button
+                    onClick={() => {
+                      const selected = selectedCircuitForDetails;
+                      setSelectedCircuitForDetails(null);
+                      if (onBookOffer) onBookOffer(selected);
+                    }}
+                    className="bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold px-5 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    Réserver maintenant
+                    <ArrowRight size={13} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ==================== SIDE-BY-SIDE CIRCUIT COMPARATOR MODAL ==================== */}
+      {isComparisonModalOpen && (
+        <div id="comparator-modal-backdrop" className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-4xl w-full border border-gray-100 shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-6 bg-radial from-amber-700 to-amber-800 text-white flex justify-between items-center shrink-0">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200">Teranga Standard</span>
+                <h3 className="font-sans font-bold text-lg">Comparaison de Circuits</h3>
+              </div>
+              <button
+                onClick={() => setIsComparisonModalOpen(false)}
+                className="p-1.5 hover:bg-amber-600/30 text-white hover:text-amber-100 rounded-full transition-all cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Comparison Grid Scrollable Table */}
+            <div className="p-6 overflow-x-auto overflow-y-auto flex-1">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="p-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-1/4">Critères</th>
+                    {comparisonList.map(id => {
+                      const offer = allOffers.find(o => o.id === id)!;
+                      return (
+                        <th key={id} className="p-3 w-1/4">
+                          <div className="space-y-2 font-semibold">
+                            <h4 className="font-sans font-bold text-gray-900 text-xs leading-snug line-clamp-2">{offer.title}</h4>
+                            <span className="font-mono font-bold text-emerald-700 block text-xs bg-emerald-50 px-2.5 py-1 rounded-md max-w-max">
+                              {offer.price.toLocaleString('fr-FR')} FCFA
+                            </span>
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 font-medium text-gray-600">
+                  {/* Row 1: Durée */}
+                  <tr>
+                    <td className="p-3 font-bold text-gray-400 uppercase text-[9px]">Durée</td>
+                    {comparisonList.map(id => {
+                      const offer = allOffers.find(o => o.id === id)!;
+                      const details = getCircuitDetails(offer);
+                      return <td key={id} className="p-3 font-bold text-gray-800">{details.duration}</td>;
+                    })}
+                  </tr>
+                  {/* Row 2: Niveau */}
+                  <tr>
+                    <td className="p-3 font-bold text-gray-400 uppercase text-[9px]">Niveau</td>
+                    {comparisonList.map(id => {
+                      const offer = allOffers.find(o => o.id === id)!;
+                      const details = getCircuitDetails(offer);
+                      return (
+                        <td key={id} className="p-3">
+                          <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                            details.level === 'Aventure' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                            details.level === 'Luxe' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
+                            'bg-blue-50 text-blue-700 border border-blue-100'
+                          }`}>
+                            {details.level}
+                          </span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* Row 3: Formule */}
+                  <tr>
+                    <td className="p-3 font-bold text-gray-400 uppercase text-[9px]">Formule</td>
+                    {comparisonList.map(id => {
+                      const offer = allOffers.find(o => o.id === id)!;
+                      const details = getCircuitDetails(offer);
+                      return <td key={id} className="p-3">{details.type} (max {offer.capacity} pers)</td>;
+                    })}
+                  </tr>
+                  {/* Row 4: Itinéraire */}
+                  <tr>
+                    <td className="p-3 font-bold text-gray-400 uppercase text-[9px]">Lieux clés</td>
+                    {comparisonList.map(id => {
+                      const offer = allOffers.find(o => o.id === id)!;
+                      const details = getCircuitDetails(offer);
+                      return (
+                        <td key={id} className="p-3">
+                          <div className="flex flex-wrap gap-1">
+                            {details.destinations.map((d, i) => (
+                              <span key={i} className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-[10px]">{d}</span>
+                            ))}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* Row 5: Inclusions */}
+                  <tr>
+                    <td className="p-3 font-bold text-gray-400 uppercase text-[9px]">Sont compris</td>
+                    {comparisonList.map(id => {
+                      const offer = allOffers.find(o => o.id === id)!;
+                      const details = getCircuitDetails(offer);
+                      return (
+                        <td key={id} className="p-3 text-[11px] leading-relaxed text-gray-500">
+                          <ul className="list-disc pl-4 space-y-0.5 font-medium">
+                            {details.inclusions.slice(0, 3).map((inc, i) => <li key={i}>{inc}</li>)}
+                            {details.inclusions.length > 3 && <li>Et d'autres...</li>}
+                          </ul>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* Row 6: Réserver */}
+                  <tr>
+                    <td className="p-3 font-bold text-gray-400 uppercase text-[9px]">Action</td>
+                    {comparisonList.map(id => {
+                      const offer = allOffers.find(o => o.id === id)!;
+                      return (
+                        <td key={id} className="p-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsComparisonModalOpen(false);
+                              if (onBookOffer) onBookOffer(offer);
+                            }}
+                            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold py-1.5 px-3 rounded-xl text-[10px] transition-all cursor-pointer shadow-xs text-center block animate-pulse hover:animate-none"
+                          >
+                            Réserver
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end shrink-0">
+              <button
+                onClick={() => setIsComparisonModalOpen(false)}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold px-5 py-2 rounded-xl text-xs transition-all cursor-pointer"
+              >
+                Fermer le Comparateur
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
