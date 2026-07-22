@@ -337,7 +337,7 @@ export default function CircuitsApp({
             <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Accès d'évaluation rapide :</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
-                onClick={() => onDirectLogin('agency_casamance@teranga.sn', 'professional')}
+                onClick={() => onDirectLogin('agency_casamance@teranga.sn', 'agency')}
                 className="bg-amber-600 hover:bg-amber-500 text-white font-sans font-bold py-2.5 px-3 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>🚀 Agence Casamance</span>
@@ -345,7 +345,7 @@ export default function CircuitsApp({
               </button>
 
               <button
-                onClick={() => onDirectLogin('guide_dakar@teranga.sn', 'professional')}
+                onClick={() => onDirectLogin('guide_dakar@teranga.sn', 'guide')}
                 className="bg-amber-800 hover:bg-amber-700 text-white font-sans font-bold py-2.5 px-3 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>🧭 Guide Abdoulaye</span>
