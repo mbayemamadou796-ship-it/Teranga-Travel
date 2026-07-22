@@ -18,6 +18,7 @@ import BookingModal from './components/BookingModal';
 import AppHebergeurs from './components/AppHebergeurs';
 import AppCircuitsGuides from './components/AppCircuitsGuides';
 import AppAdmin from './components/AppAdmin';
+import { TerangaLogo } from './components/TerangaLogo';
 
 export default function App() {
   // Navigation & Routing State
@@ -435,17 +436,9 @@ export default function App() {
               setSelectedEstablishment(null);
               setActiveTab('destinations');
             }}
-            className="flex items-center gap-3 focus:outline-none cursor-pointer group"
+            className="focus:outline-none cursor-pointer group"
           >
-            <div className="w-11 h-11 bg-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-md shadow-emerald-700/10 group-hover:scale-105 transition-all">
-              <span className="text-xl">🇸🇳</span>
-            </div>
-            <div className="text-left">
-              <h1 className="font-sans font-bold text-lg text-gray-900 tracking-tight leading-none group-hover:text-emerald-700 transition-colors">
-                Teranga Travel
-              </h1>
-              <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase mt-1">Sénégal Autrement</p>
-            </div>
+            <TerangaLogo size={42} showText={true} />
           </button>
 
           {/* Navigation Menu */}
@@ -977,9 +970,20 @@ export default function App() {
                               <div className="text-right sm:border-l sm:border-gray-100 sm:pl-5 shrink-0 w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end gap-3 pt-3 sm:pt-0 border-t border-gray-100 sm:border-t-0">
                                 <div>
                                   <span className="text-[10px] text-gray-400 block font-sans font-medium">Prix estimé</span>
-                                  <span className="font-mono font-bold text-emerald-700 text-base">
-                                    {offer.price.toLocaleString('fr-FR')} FCFA
-                                  </span>
+                                  {offer.promoPrice ? (
+                                    <div className="space-y-0.5">
+                                      <span className="font-mono font-bold text-rose-600 text-base block">
+                                        {offer.promoPrice.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}
+                                      </span>
+                                      <span className="font-mono text-gray-400 line-through text-[10px] block">
+                                        {offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="font-mono font-bold text-emerald-700 text-base block">
+                                      {offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}
+                                    </span>
+                                  )}
                                   <span className="text-[9px] text-gray-400 block">/ nuit</span>
                                 </div>
 
@@ -1230,7 +1234,8 @@ export default function App() {
               <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
                 
                 {/* Left graphics intro panel */}
-                <div className="md:col-span-5 space-y-6">
+                <div className="md:col-span-5 space-y-6 flex flex-col items-start">
+                  <TerangaLogo size={90} showText={true} textPosition="bottom" className="mb-4 self-center md:self-start bg-slate-50 p-4 rounded-3xl border border-gray-100" />
                   <span className="text-[10px] font-sans font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-full uppercase tracking-wider">
                     Espace Membres
                   </span>
@@ -1953,11 +1958,8 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-100 py-12 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <div className="flex justify-center items-center gap-2 font-sans font-bold text-gray-900">
-            <span>🇸🇳</span>
-            <span>Teranga Travel Sénégal</span>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 flex flex-col items-center">
+          <TerangaLogo size={52} showText={true} textPosition="bottom" className="mx-auto" />
           <p className="text-gray-400 text-xs max-w-md mx-auto leading-relaxed font-medium">
             Plateforme touristique numérique unifiée. Conçue avec amour pour promouvoir le tourisme local, préserver le patrimoine historique sénégalais et encourager l'éco-responsabilité.
           </p>

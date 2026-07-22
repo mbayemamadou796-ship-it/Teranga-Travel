@@ -10,6 +10,7 @@ import {
   User, Star, BookOpen, Clock, RefreshCw, Layers
 } from 'lucide-react';
 import { Establishment, Offer, Booking, User as UserType, SenegalDestination } from '../types';
+import { TerangaLogo } from './TerangaLogo';
 
 interface AppCircuitsGuidesProps {
   currentUser: UserType | null;
@@ -221,7 +222,8 @@ export default function AppCircuitsGuides({
   // If user is not logged in as Agency/Guide
   if (!currentUser || currentUser.role !== 'professional' || (myProfile && !isCircuitsGuidesEst)) {
     return (
-      <div id="circuits-auth-gate" className="max-w-4xl mx-auto space-y-8 animate-fade-in py-12">
+      <div id="circuits-auth-gate" className="max-w-4xl mx-auto space-y-8 animate-fade-in py-12 flex flex-col items-center">
+        <TerangaLogo size={88} showText={true} textPosition="bottom" className="mb-2 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm" />
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 px-4 py-1.5 rounded-full border border-amber-100 font-sans font-medium text-xs tracking-wider uppercase">
             🥾 Application Web Circuits & Guides
@@ -276,27 +278,30 @@ export default function AppCircuitsGuides({
       
       {/* Header Profile Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-xs">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
-              {isGuide ? '🥾 Guide Touristique' : '🗺️ Agence de Voyage'}
-            </span>
-            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-              myProfile.status === 'approved' 
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                : myProfile.status === 'rejected'
-                ? 'bg-rose-50 border-rose-200 text-rose-800' 
-                : 'bg-amber-50 border-amber-200 text-amber-800'
-            }`}>
-              {myProfile.status === 'approved' ? '✓ Profil Validé' : myProfile.status === 'rejected' ? '✗ Profil Refusé' : '⏰ Profil en cours d\'examen'}
-            </span>
+        <div className="flex items-start gap-4">
+          <TerangaLogo size={52} showText={false} className="bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shrink-0" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+                {isGuide ? '🥾 Guide Touristique' : '🗺️ Agence de Voyage'}
+              </span>
+              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                myProfile.status === 'approved' 
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                  : myProfile.status === 'rejected'
+                  ? 'bg-rose-50 border-rose-200 text-rose-800' 
+                  : 'bg-amber-50 border-amber-200 text-amber-800'
+              }`}>
+                {myProfile.status === 'approved' ? '✓ Profil Validé' : myProfile.status === 'rejected' ? '✗ Profil Refusé' : '⏰ Profil en cours d\'examen'}
+              </span>
+            </div>
+            <h2 className="font-sans font-bold text-2xl text-gray-900 tracking-tight">
+              {myProfile.name}
+            </h2>
+            <p className="text-gray-500 text-xs flex items-center gap-1 font-semibold">
+              <MapPin size={12} /> {myProfile.location} • {isGuide ? 'Langues & Spécialités' : 'Logistique'} : {myProfile.amenities.join(', ')}
+            </p>
           </div>
-          <h2 className="font-sans font-bold text-2xl text-gray-900 tracking-tight">
-            {myProfile.name}
-          </h2>
-          <p className="text-gray-500 text-xs flex items-center gap-1 font-semibold">
-            <MapPin size={12} /> {myProfile.location} • {isGuide ? 'Langues & Spécialités' : 'Logistique'} : {myProfile.amenities.join(', ')}
-          </p>
         </div>
 
         <div className="flex gap-2 shrink-0">

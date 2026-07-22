@@ -9,6 +9,7 @@ import {
   MapPin, Sliders, DollarSign, Calendar, Eye, RefreshCw, Star, MessageSquare
 } from 'lucide-react';
 import { Establishment, Offer, Booking, User as UserType } from '../types';
+import { TerangaLogo } from './TerangaLogo';
 
 interface AppAdminProps {
   currentUser: UserType | null;
@@ -30,7 +31,7 @@ export default function AppAdmin({
   const [allUsers, setAllUsers] = useState<UserType[]>([]);
   
   // Tab for different admin subsections
-  const [adminTab, setAdminTab] = useState<'approvals' | 'offers' | 'users' | 'bookings'>('approvals');
+  const [adminTab, setAdminTab] = useState<'approvals' | 'offers' | 'users' | 'bookings' | 'mapping'>('approvals');
   
   // Rejection Reason dialog state
   const [rejectingOfferId, setRejectingOfferId] = useState<string | null>(null);
@@ -131,7 +132,8 @@ export default function AppAdmin({
   // Auth gate if not admin
   if (!currentUser || currentUser.role !== 'admin') {
     return (
-      <div id="admin-auth-gate" className="max-w-4xl mx-auto space-y-8 animate-fade-in py-12">
+      <div id="admin-auth-gate" className="max-w-4xl mx-auto space-y-8 animate-fade-in py-12 flex flex-col items-center">
+        <TerangaLogo size={88} showText={true} textPosition="bottom" className="mb-2 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm" />
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-1.5 rounded-full border border-slate-800 font-sans font-medium text-xs tracking-wider uppercase">
             🛡️ Application Web Administration
@@ -175,12 +177,15 @@ export default function AppAdmin({
       
       {/* Top Banner stats */}
       <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-850 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md">
-        <div className="space-y-1">
-          <span className="text-[10px] font-bold tracking-widest uppercase bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
-            🛡️ App Administrateur
-          </span>
-          <h2 className="font-sans font-bold text-2xl tracking-tight">Supervision Générale</h2>
-          <p className="text-slate-400 text-xs">Administrateur connecté : <b>Modou Sow</b> • Contrôle total de la plateforme</p>
+        <div className="flex items-center gap-4">
+          <TerangaLogo size={52} showText={false} className="bg-slate-800 p-1.5 rounded-2xl border border-slate-700 shrink-0" />
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold tracking-widest uppercase bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
+              🛡️ App Administrateur
+            </span>
+            <h2 className="font-sans font-bold text-2xl tracking-tight">Supervision Générale</h2>
+            <p className="text-slate-400 text-xs">Administrateur connecté : <b>Modou Sow</b> • Contrôle total de la plateforme</p>
+          </div>
         </div>
 
         <button
@@ -275,6 +280,16 @@ export default function AppAdmin({
         >
           Suivi des Réservations ({allBookings.length})
           {adminTab === 'bookings' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
+        </button>
+
+        <button
+          onClick={() => setAdminTab('mapping')}
+          className={`pb-3.5 text-xs font-bold transition-all relative cursor-pointer ${
+            adminTab === 'mapping' ? 'text-slate-900' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          🗂️ Fiche de Mapping (Données)
+          {adminTab === 'mapping' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
         </button>
       </div>
 
@@ -382,9 +397,22 @@ export default function AppAdmin({
                           <span className="text-[10px] text-slate-500 font-bold uppercase block">
                             Fourni par : <b>{est ? est.name : 'Prestataire'}</b>
                           </span>
-                          <span className="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
-                            {offer.price.toLocaleString('fr-FR')} FCFA
-                          </span>
+                          <div className="text-right">
+                            {offer.promoPrice ? (
+                              <div className="space-y-0.5">
+                                <span className="font-mono text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded text-[11px] block">
+                                  Promo: {offer.promoPrice.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}
+                                </span>
+                                <span className="font-mono text-gray-400 line-through text-[9px] block">
+                                  {offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <h4 className="font-bold text-gray-900 text-sm">{offer.title}</h4>
@@ -393,6 +421,12 @@ export default function AppAdmin({
                         <div className="bg-white p-3 rounded-xl border border-gray-100 space-y-1 text-[10px] text-gray-600">
                           <p><b>👥 Capacité/Durée :</b> {offer.capacity} {est?.type === 'agence' ? 'jours (Circuit)' : 'personnes'}</p>
                           <p><b>✨ Services & Détails :</b> {offer.services.join(', ')}</p>
+                          {offer.coordinates && (
+                            <p><b>📍 Coordonnées GPS :</b> Lat {offer.coordinates.lat}, Lng {offer.coordinates.lng}</p>
+                          )}
+                          {offer.availabilityCalendar && offer.availabilityCalendar.length > 0 && (
+                            <p><b>📅 Dates de validité :</b> Du {offer.availabilityCalendar[0].startDate} au {offer.availabilityCalendar[0].endDate}</p>
+                          )}
                         </div>
                       </div>
 
@@ -592,6 +626,263 @@ export default function AppAdmin({
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB 5: FICHE DE MAPPING (GUIDE DE CONCEPTION) */}
+        {adminTab === 'mapping' && (
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs space-y-6 animate-fade-in">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
+              <div className="space-y-1">
+                <h3 className="font-sans font-bold text-base text-gray-900 flex items-center gap-2">
+                  <span>🗂️</span> Fiche de Mapping des Données Unique
+                </h3>
+                <p className="text-gray-500 text-xs">
+                  "Une donnée est créée une seule fois, puis utilisée par toutes les applications." Métadonnées obligatoires de conformité.
+                </p>
+              </div>
+              <div className="bg-emerald-50 text-emerald-800 text-[11px] font-sans font-bold px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Registre Actif du Modèle Unique
+              </div>
+            </div>
+
+            {/* Explanatory cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-1.5">
+                <span className="font-bold text-gray-800 flex items-center gap-1">
+                  <span>🔄</span> Cycle de Vie Standardisé
+                </span>
+                <p className="text-gray-500 text-[11px] leading-relaxed">
+                  Toutes les fiches (Hébergements, Offres, Circuits) partagent le cycle d'états : <b className="text-gray-700">Draft</b> (Brouillon) → <b className="text-gray-700">Pending</b> (En attente) → <b className="text-gray-700">Approved</b> (Validé) → <b className="text-gray-700">Rejected</b> (Refusé) → <b className="text-gray-700">Archived</b> (Archivé).
+                </p>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-1.5">
+                <span className="font-bold text-gray-800 flex items-center gap-1">
+                  <span>📍</span> Géographie et GPS
+                </span>
+                <p className="text-gray-500 text-[11px] leading-relaxed">
+                  L'association avec une <b className="text-gray-700">Région sénégalaise</b> agréée est obligatoire. Les coordonnées GPS (Latitude / Longitude) sont implémentées pour garantir la cartographie interactive.
+                </p>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-1.5">
+                <span className="font-bold text-gray-800 flex items-center gap-1">
+                  <span>📅</span> Disponibilités & Catalogues
+                </span>
+                <p className="text-gray-500 text-[11px] leading-relaxed">
+                  La gestion intègre un calendrier d'intervalles de dates au lieu d'une simple quantité brute. Les équipements sont sélectionnés à partir d'un catalogue normé de services.
+                </p>
+              </div>
+            </div>
+
+            {/* Mapping Interactive Table */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center bg-gray-50 p-2 rounded-xl border border-gray-100">
+                <span className="text-[10px] font-bold text-slate-500 uppercase px-2">Dictionnaire d'Attributs Métier</span>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-gray-100">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-900 text-white font-bold text-[10px] uppercase tracking-wider">
+                      <th className="py-3.5 px-4 font-sans">Nom du Champ</th>
+                      <th className="py-3.5 px-4 font-mono text-slate-300">Nom Technique</th>
+                      <th className="py-3.5 px-4">Type</th>
+                      <th className="py-3.5 px-4 text-center">Obligatoire</th>
+                      <th className="py-3.5 px-4">Créateur / Éditeur</th>
+                      <th className="py-3.5 px-4">Validateur</th>
+                      <th className="py-3.5 px-4">Visibilité</th>
+                      <th className="py-3.5 px-4">Affichage & Rôle</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    
+                    {/* Category: ESTABLISHMENT */}
+                    <tr className="bg-emerald-50/40 text-emerald-900 font-bold text-[11px]">
+                      <td colSpan={8} className="py-2.5 px-4 uppercase tracking-wider border-y border-emerald-100">
+                        🏢 Objet Métier : Établissement (Hébergement, Agence ou Guide)
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Identifiant Unique</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">id</td>
+                      <td className="py-3 px-4">string</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Système</td>
+                      <td className="py-3 px-4 text-gray-500">Aucun</td>
+                      <td className="py-3 px-4 text-gray-500">Technique</td>
+                      <td className="py-3 px-4 font-medium">Clé primaire de relation avec l'offre et les réservations.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Nom de l'établissement</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">name</td>
+                      <td className="py-3 px-4">string</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Affiché en en-tête de fiche et dans les cartes de recherche.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Description Immersive</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">description</td>
+                      <td className="py-3 px-4">string</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Texte descriptif présentant les atouts de l'hébergeur ou guide.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Région Administrative</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">location</td>
+                      <td className="py-3 px-4">SenegalDestination</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Dakar, Sine Saloum, Casamance, Saint-Louis, Kédougou. Clé de filtre géographique.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Coordonnées GPS</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">coordinates</td>
+                      <td className="py-3 px-4">{"{ lat, lng }"}</td>
+                      <td className="py-3 px-4 text-center text-gray-400">Non</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Position exacte sur la carte interactive Google Maps / Leaflet.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Statut du Cycle de vie</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">status</td>
+                      <td className="py-3 px-4">EstablishmentStatus</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire / Admin</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Privé/Public</td>
+                      <td className="py-3 px-4 font-medium">Draft (brouillon) → Pending (validation) → Approved (ligne) → Rejected (rejeté) → Archived.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Créateur de la donnée</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">creatorId</td>
+                      <td className="py-3 px-4">string (user_id)</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Système / Owner</td>
+                      <td className="py-3 px-4 text-gray-500">Aucun</td>
+                      <td className="py-3 px-4 text-gray-500">Interne</td>
+                      <td className="py-3 px-4 font-medium">Sert à l'audit pour savoir quel compte utilisateur a créé la fiche.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Équipements & Services</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">amenities</td>
+                      <td className="py-3 px-4">string[] (catalog)</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Sélectionnés depuis un catalogue strict (Wi-Fi, Climatisation, Piscine, etc.).</td>
+                    </tr>
+
+                    {/* Category: OFFER */}
+                    <tr className="bg-amber-50/40 text-amber-900 font-bold text-[11px]">
+                      <td colSpan={8} className="py-2.5 px-4 uppercase tracking-wider border-y border-amber-100">
+                        🎁 Objet Métier : Offre (Chambre, Bungalow ou Circuit)
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Titre de l'offre</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">title</td>
+                      <td className="py-3 px-4">string</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Titre attractif affiché sur la fiche descriptive de l'offre (ex. Suite Junior).</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Tarif Normal</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">price</td>
+                      <td className="py-3 px-4">number</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Prix brut de base servant pour le calcul de la réservation.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Tarif Promotionnel</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">promoPrice</td>
+                      <td className="py-3 px-4">number</td>
+                      <td className="py-3 px-4 text-center text-gray-400">Non</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Prix réduit d'appel pour déclencher plus de réservations (barré à l'écran).</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Devise Monétaire</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">currency</td>
+                      <td className="py-3 px-4">string</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Valeur standard de devise, par défaut "FCFA" ou "XOF".</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Images Structurées</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">structuredImages</td>
+                      <td className="py-3 px-4">OfferImage[]</td>
+                      <td className="py-3 px-4 text-center text-gray-400">Non</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Tableau de photos avec légende textuelle, niveau de couverture et ordre d'affichage.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Calendrier Dispos</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">availabilityCalendar</td>
+                      <td className="py-3 px-4">AvailabilityPeriod[]</td>
+                      <td className="py-3 px-4 text-center text-gray-400">Non</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire</td>
+                      <td className="py-3 px-4 text-gray-500">Administrateur</td>
+                      <td className="py-3 px-4 text-gray-500">Public</td>
+                      <td className="py-3 px-4 font-medium">Intervalles de dates spécifiant si l'offre est réservable et si le prix varie.</td>
+                    </tr>
+
+                    {/* Category: BOOKING */}
+                    <tr className="bg-blue-50/40 text-blue-900 font-bold text-[11px]">
+                      <td colSpan={8} className="py-2.5 px-4 uppercase tracking-wider border-y border-blue-100">
+                        🗓️ Objet Métier : Réservation (Booking)
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Dates de séjour</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">checkIn, checkOut</td>
+                      <td className="py-3 px-4">string (date YYYY-MM-DD)</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Voyageur</td>
+                      <td className="py-3 px-4 text-gray-500">Aucun</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire / Voyageur</td>
+                      <td className="py-3 px-4 font-medium">Détermine la période et le nombre de nuitées pour le calcul financier.</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/40 text-[11px]">
+                      <td className="py-3 px-4 font-bold text-gray-900">Montant Facturé</td>
+                      <td className="py-3 px-4 font-mono text-amber-700">totalPrice</td>
+                      <td className="py-3 px-4">number</td>
+                      <td className="py-3 px-4 text-center font-bold text-emerald-600">Oui</td>
+                      <td className="py-3 px-4 text-gray-500">Système (Calculé)</td>
+                      <td className="py-3 px-4 text-gray-500">Aucun</td>
+                      <td className="py-3 px-4 text-gray-500">Prestataire / Voyageur</td>
+                      <td className="py-3 px-4 font-medium">Calculé automatiquement par multiplication du nombre de nuitées par le prix de l'offre.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 

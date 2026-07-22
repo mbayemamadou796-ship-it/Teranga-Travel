@@ -10,6 +10,7 @@ import {
   Phone, Mail, ArrowRight, Eye, RefreshCw, Star, Info
 } from 'lucide-react';
 import { Establishment, Offer, Booking, User as UserType, SenegalDestination } from '../types';
+import { TerangaLogo } from './TerangaLogo';
 
 interface AppHebergeursProps {
   currentUser: UserType | null;
@@ -42,6 +43,13 @@ export default function AppHebergeurs({
   const [offerTitle, setOfferTitle] = useState('');
   const [offerDesc, setOfferDesc] = useState('');
   const [offerPrice, setOfferPrice] = useState('');
+  const [offerPromoPrice, setOfferPromoPrice] = useState('');
+  const [offerCurrency, setOfferCurrency] = useState('FCFA');
+  const [offerLat, setOfferLat] = useState('');
+  const [offerLng, setOfferLng] = useState('');
+  const [offerStartDate, setOfferStartDate] = useState('');
+  const [offerEndDate, setOfferEndDate] = useState('');
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [offerCapacity, setOfferCapacity] = useState('2');
   const [offerQty, setOfferQty] = useState('2');
   const [offerServices, setOfferServices] = useState('');
@@ -155,36 +163,121 @@ export default function AppHebergeurs({
     }
   };
 
+  // Helper to start editing an existing offer
+  const startEditOffer = (offer: Offer) => {
+    setEditingOffer(offer);
+    setOfferTitle(offer.title);
+    setOfferDesc(offer.description);
+    setOfferPrice(String(offer.price));
+    setOfferPromoPrice(offer.promoPrice ? String(offer.promoPrice) : '');
+    setOfferCurrency(offer.currency || 'FCFA');
+    setOfferCapacity(String(offer.capacity));
+    setOfferQty(String(offer.availableQuantity));
+    setOfferServices(offer.services.join(', '));
+    setOfferLat(offer.coordinates?.lat ? String(offer.coordinates.lat) : '');
+    setOfferLng(offer.coordinates?.lng ? String(offer.coordinates.lng) : '');
+    if (offer.availabilityCalendar && offer.availabilityCalendar.length > 0) {
+      setOfferStartDate(offer.availabilityCalendar[0].startDate);
+      setOfferEndDate(offer.availabilityCalendar[0].endDate);
+    } else {
+      setOfferStartDate('');
+      setOfferEndDate('');
+    }
+    setShowAddOffer(true); // Share the same form panel for simplicity
+  };
+
+  const resetOfferForm = () => {
+    setOfferTitle('');
+    setOfferDesc('');
+    setOfferPrice('');
+    setOfferPromoPrice('');
+    setOfferCurrency('FCFA');
+    setOfferLat('');
+    setOfferLng('');
+    setOfferStartDate('');
+    setOfferEndDate('');
+    setOfferCapacity('2');
+    setOfferQty('2');
+    setOfferServices('');
+    setEditingOffer(null);
+    setShowAddOffer(false);
+  };
+
   // Handle Add offer
   const handleAddOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!myEstablishment) return;
     try {
+      const isPromo = Boolean(offerPromoPrice);
+      const payload = {
+        title: offerTitle,
+        description: offerDesc,
+        price: Number(offerPrice),
+        promoPrice: isPromo ? Number(offerPromoPrice) : undefined,
+        currency: offerCurrency,
+        capacity: Number(offerCapacity),
+        services: offerServices.split(',').map(s => s.trim()).filter(Boolean),
+        availableQuantity: Number(offerQty),
+        coordinates: (offerLat && offerLng) ? { lat: Number(offerLat), lng: Number(offerLng) } : undefined,
+        availabilityCalendar: (offerStartDate && offerEndDate) ? [{
+          startDate: offerStartDate,
+          endDate: offerEndDate,
+          available: true
+        }] : [],
+        status: 'pending' as const
+      };
+
       const response = await fetch(`/api/establishments/${myEstablishment.id}/offers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: offerTitle,
-          description: offerDesc,
-          price: Number(offerPrice),
-          capacity: Number(offerCapacity),
-          services: offerServices.split(',').map(s => s.trim()).filter(Boolean),
-          availableQuantity: Number(offerQty)
-        })
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
-        setOfferTitle('');
-        setOfferDesc('');
-        setOfferPrice('');
-        setOfferCapacity('2');
-        setOfferQty('2');
-        setOfferServices('');
-        setShowAddOffer(false);
+        resetOfferForm();
         await fetchMyData();
         alert("Offre publiée avec succès ! Elle est en attente de validation par l'administrateur.");
       }
     } catch (err) {
       console.error('Failed to create offer:', err);
+    }
+  };
+
+  // Handle Edit offer submit
+  const handleEditOfferSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOffer) return;
+    try {
+      const isPromo = Boolean(offerPromoPrice);
+      const payload = {
+        title: offerTitle,
+        description: offerDesc,
+        price: Number(offerPrice),
+        promoPrice: isPromo ? Number(offerPromoPrice) : null,
+        currency: offerCurrency,
+        capacity: Number(offerCapacity),
+        services: offerServices.split(',').map(s => s.trim()).filter(Boolean),
+        availableQuantity: Number(offerQty),
+        coordinates: (offerLat && offerLng) ? { lat: Number(offerLat), lng: Number(offerLng) } : undefined,
+        availabilityCalendar: (offerStartDate && offerEndDate) ? [{
+          startDate: offerStartDate,
+          endDate: offerEndDate,
+          available: true
+        }] : [],
+        status: 'pending' as const // Reset to pending for admin validation after correction
+      };
+
+      const response = await fetch(`/api/offers/${editingOffer.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        resetOfferForm();
+        await fetchMyData();
+        alert("Offre corrigée et republiée ! Elle est en attente de validation par l'administrateur.");
+      }
+    } catch (err) {
+      console.error('Failed to update offer:', err);
     }
   };
 
@@ -219,7 +312,8 @@ export default function AppHebergeurs({
   // If user is not logged in as Hébergeur
   if (!currentUser || currentUser.role !== 'professional' || (myEstablishment && !isHebergeurEst)) {
     return (
-      <div id="hebergeurs-auth-gate" className="max-w-4xl mx-auto space-y-8 animate-fade-in py-12">
+      <div id="hebergeurs-auth-gate" className="max-w-4xl mx-auto space-y-8 animate-fade-in py-12 flex flex-col items-center">
+        <TerangaLogo size={88} showText={true} textPosition="bottom" className="mb-2 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm" />
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 px-4 py-1.5 rounded-full border border-emerald-100 font-sans font-medium text-xs tracking-wider uppercase">
             🏨 Application Web Hébergeurs
@@ -263,31 +357,34 @@ export default function AppHebergeurs({
       
       {/* Header Info */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-xs">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100">
-              🏨 App Hébergeurs
-            </span>
-            {myEstablishment && (
-              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-                myEstablishment.status === 'approved' 
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                  : myEstablishment.status === 'rejected'
-                  ? 'bg-rose-50 border-rose-200 text-rose-800' 
-                  : 'bg-amber-50 border-amber-200 text-amber-800'
-              }`}>
-                {myEstablishment.status === 'approved' ? '✓ Établissement Validé' : myEstablishment.status === 'rejected' ? '✗ Établissement Refusé' : '⏰ Profil en cours de validation'}
+        <div className="flex items-start gap-4">
+          <TerangaLogo size={52} showText={false} className="bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shrink-0" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100">
+                🏨 App Hébergeurs
               </span>
+              {myEstablishment && (
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                  myEstablishment.status === 'approved' 
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                    : myEstablishment.status === 'rejected'
+                    ? 'bg-rose-50 border-rose-200 text-rose-800' 
+                    : 'bg-amber-50 border-amber-200 text-amber-800'
+                }`}>
+                  {myEstablishment.status === 'approved' ? '✓ Établissement Validé' : myEstablishment.status === 'rejected' ? '✗ Établissement Refusé' : '⏰ Profil en cours de validation'}
+                </span>
+              )}
+            </div>
+            <h2 className="font-sans font-bold text-2xl text-gray-900 tracking-tight">
+              {myEstablishment ? myEstablishment.name : "Mon Établissement"}
+            </h2>
+            {myEstablishment && (
+              <p className="text-gray-500 text-xs flex items-center gap-1 font-semibold">
+                <MapPin size={12} /> {myEstablishment.location} • Type : {myEstablishment.type === 'hotel' ? 'Hôtel' : myEstablishment.type === 'campement' ? 'Campement' : "Maison d'hôtes"}
+              </p>
             )}
           </div>
-          <h2 className="font-sans font-bold text-2xl text-gray-900 tracking-tight">
-            {myEstablishment ? myEstablishment.name : "Mon Établissement"}
-          </h2>
-          {myEstablishment && (
-            <p className="text-gray-500 text-xs flex items-center gap-1 font-semibold">
-              <MapPin size={12} /> {myEstablishment.location} • Type : {myEstablishment.type === 'hotel' ? 'Hôtel' : myEstablishment.type === 'campement' ? 'Campement' : "Maison d'hôtes"}
-            </p>
-          )}
         </div>
 
         {myEstablishment && (
@@ -506,12 +603,20 @@ export default function AppHebergeurs({
         </form>
       )}
 
-      {/* Add Offer Form Panel */}
+      {/* Add / Edit Offer Form Panel */}
       {myEstablishment && showAddOffer && (
-        <form onSubmit={handleAddOffer} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4 animate-fade-in max-w-2xl">
-          <h3 className="font-sans font-bold text-sm text-gray-900 border-b border-gray-100 pb-2">
-            Créer une nouvelle Offre / Chambre
-          </h3>
+        <form onSubmit={editingOffer ? handleEditOfferSubmit : handleAddOffer} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4 animate-fade-in max-w-2xl">
+          <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+            <h3 className="font-sans font-bold text-sm text-gray-900">
+              {editingOffer ? `Modifier l'Offre : ${editingOffer.title}` : "Créer une nouvelle Offre / Chambre"}
+            </h3>
+            {editingOffer && (
+              <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-100 px-2 py-0.5 rounded font-bold">
+                Mode Correction
+              </span>
+            )}
+          </div>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[10px] font-semibold text-gray-500 uppercase">Intitulé de l'offre (chambre / lodge)</label>
@@ -524,18 +629,64 @@ export default function AppHebergeurs({
                 className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800"
               />
             </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2 space-y-1">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase">Tarif Normal</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="Ex. 45000"
+                  value={offerPrice}
+                  onChange={(e) => setOfferPrice(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800 font-mono"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase">Devise</label>
+                <select
+                  value={offerCurrency}
+                  onChange={(e) => setOfferCurrency(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 px-2.5 py-2 rounded-xl text-xs text-gray-800 font-semibold"
+                >
+                  <option value="FCFA">FCFA</option>
+                  <option value="EUR">EUR</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-gray-500 uppercase">Prix par nuit (FCFA)</label>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase">Tarif Promotionnel (Optionnel)</label>
               <input
                 type="number"
-                required
-                placeholder="Ex. 45000"
-                value={offerPrice}
-                onChange={(e) => setOfferPrice(e.target.value)}
+                placeholder="Ex. 39000 (Laissé vide si aucun)"
+                value={offerPromoPrice}
+                onChange={(e) => setOfferPromoPrice(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800 font-mono"
               />
             </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-gray-500 uppercase">Début Disponibilité</label>
+              <input
+                type="date"
+                value={offerStartDate}
+                onChange={(e) => setOfferStartDate(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-xs text-gray-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-gray-500 uppercase">Fin Disponibilité</label>
+              <input
+                type="date"
+                value={offerEndDate}
+                onChange={(e) => setOfferEndDate(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-xs text-gray-800"
+              />
+            </div>
           </div>
+
           <div className="space-y-1">
             <label className="text-[10px] font-semibold text-gray-500 uppercase">Description de l'offre</label>
             <textarea
@@ -547,7 +698,8 @@ export default function AppHebergeurs({
               className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-xs text-gray-800"
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label className="text-[10px] font-semibold text-gray-500 uppercase">Capacité (personnes)</label>
               <input
@@ -568,7 +720,7 @@ export default function AppHebergeurs({
                 className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800 font-mono"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 col-span-2">
               <label className="text-[10px] font-semibold text-gray-500 uppercase">Services (séparés par virgules)</label>
               <input
                 type="text"
@@ -579,16 +731,42 @@ export default function AppHebergeurs({
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-gray-500 uppercase">Latitude GPS (Optionnelle)</label>
+              <input
+                type="number"
+                step="any"
+                placeholder="Ex. 14.4974"
+                value={offerLat}
+                onChange={(e) => setOfferLat(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800 font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-gray-500 uppercase">Longitude GPS (Optionnelle)</label>
+              <input
+                type="number"
+                step="any"
+                placeholder="Ex. -17.0847"
+                value={offerLng}
+                onChange={(e) => setOfferLng(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2 rounded-xl text-xs text-gray-800 font-mono"
+              />
+            </div>
+          </div>
+
           <div className="flex gap-2 pt-2">
             <button
               type="submit"
               className="bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold px-4 py-2 rounded-xl text-xs cursor-pointer transition-all"
             >
-              Envoyer pour validation
+              {editingOffer ? "Enregistrer les Corrections" : "Envoyer pour validation"}
             </button>
             <button
               type="button"
-              onClick={() => setShowAddOffer(false)}
+              onClick={resetOfferForm}
               className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-sans font-bold px-4 py-2 rounded-xl text-xs cursor-pointer transition-all"
             >
               Annuler
@@ -596,7 +774,6 @@ export default function AppHebergeurs({
           </div>
         </form>
       )}
-
       {/* Main Stats Grid */}
       {myEstablishment && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -678,9 +855,18 @@ export default function AppHebergeurs({
                             <div className="space-y-1">
                               <h4 className="font-bold text-gray-900">{offer.title}</h4>
                               <p className="text-gray-500 text-[11px]">{offer.description}</p>
-                              <span className="font-mono text-emerald-700 font-bold">{offer.price.toLocaleString('fr-FR')} FCFA</span>
+                              <span className="font-mono text-emerald-700 font-bold">{offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}</span>
                             </div>
-                            <span className="text-[9px] text-amber-800 bg-amber-50 px-2 py-1 rounded font-bold border border-amber-100">En cours d'examen</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => startEditOffer(offer)}
+                                className="p-1.5 hover:bg-gray-100 text-gray-500 hover:text-emerald-700 rounded-lg border border-gray-200 cursor-pointer"
+                                title="Modifier / Corriger"
+                              >
+                                <Edit3 size={12} />
+                              </button>
+                              <span className="text-[9px] text-amber-800 bg-amber-50 px-2 py-1 rounded font-bold border border-amber-100">Examen</span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -701,12 +887,28 @@ export default function AppHebergeurs({
                               <h4 className="font-bold text-gray-900">{offer.title}</h4>
                               <p className="text-gray-500 text-[11px]">{offer.description}</p>
                               <div className="flex gap-2 items-center text-[10px] pt-1">
-                                <span className="font-mono text-emerald-700 font-bold">{offer.price.toLocaleString('fr-FR')} FCFA / nuit</span>
+                                {offer.promoPrice ? (
+                                  <>
+                                    <span className="font-mono text-rose-600 font-bold">{offer.promoPrice.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}</span>
+                                    <span className="font-mono text-gray-400 line-through text-[9px]">{offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}</span>
+                                  </>
+                                ) : (
+                                  <span className="font-mono text-emerald-700 font-bold">{offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}</span>
+                                )}
                                 <span className="text-gray-400">• Capacité : {offer.capacity} pers.</span>
                                 <span className="text-gray-400">• Stock : {offer.availableQuantity}</span>
                               </div>
                             </div>
-                            <span className="text-[9px] text-emerald-800 bg-emerald-50 px-2 py-1 rounded font-bold border border-emerald-100">Visible public</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => startEditOffer(offer)}
+                                className="p-1.5 hover:bg-gray-100 text-gray-500 hover:text-emerald-700 rounded-lg border border-gray-200 cursor-pointer"
+                                title="Modifier l'offre"
+                              >
+                                <Edit3 size={12} />
+                              </button>
+                              <span className="text-[9px] text-emerald-800 bg-emerald-50 px-2 py-1 rounded font-bold border border-emerald-100">Visible</span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -727,9 +929,19 @@ export default function AppHebergeurs({
                               <div className="space-y-1">
                                 <h4 className="font-bold text-gray-900">{offer.title}</h4>
                                 <p className="text-gray-500 text-[11px]">{offer.description}</p>
-                                <span className="font-mono text-emerald-700 font-bold">{offer.price.toLocaleString('fr-FR')} FCFA</span>
+                                <span className="font-mono text-emerald-700 font-bold">{offer.price.toLocaleString('fr-FR')} {offer.currency || 'FCFA'}</span>
                               </div>
-                              <span className="text-[9px] text-rose-800 bg-rose-50 px-2 py-1 rounded font-bold border border-rose-100">Refusée</span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => startEditOffer(offer)}
+                                  className="bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                                  title="Corriger l'offre"
+                                >
+                                  <Edit3 size={11} />
+                                  <span>Corriger</span>
+                                </button>
+                                <span className="text-[9px] text-rose-800 bg-rose-50 px-2 py-1 rounded font-bold border border-rose-100">Refusée</span>
+                              </div>
                             </div>
                             <div className="mt-2.5 p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-[10px] text-rose-900 flex items-start gap-1.5 font-medium">
                               <AlertCircle size={12} className="text-rose-600 shrink-0 mt-0.5" />

@@ -35,7 +35,7 @@ export interface Destination {
 
 export type EstablishmentType = 'hotel' | 'campement' | 'maison_hotes' | 'agence' | 'guide';
 
-export type EstablishmentStatus = 'pending' | 'approved' | 'rejected';
+export type EstablishmentStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
 
 export interface Establishment {
   id: string;
@@ -50,22 +50,64 @@ export interface Establishment {
   amenities: string[];
   contactEmail?: string;
   contactPhone?: string;
+  
+  // Design guide mapping extensions
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  creatorId?: string;
+  modifierId?: string;
+  validatorId?: string;
+  visibility?: 'public' | 'private';
+  displayOrder?: number;
+  usageInfo?: string;
 }
 
-export type OfferStatus = 'pending' | 'approved' | 'rejected';
+export type OfferStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
+
+export interface OfferImage {
+  url: string;
+  legend: string;
+  order: number;
+  isCover: boolean;
+}
+
+export interface AvailabilityPeriod {
+  startDate: string;
+  endDate: string;
+  available: boolean;
+  priceOverride?: number;
+}
 
 export interface Offer {
   id: string;
   establishmentId: string;
   title: string;
   description: string;
-  price: number; // in XOF (FCFA)
+  price: number; // normal price
+  promoPrice?: number; // promotional price
+  currency?: string; // e.g. "FCFA" or "XOF"
   capacity: number;
   services: string[];
   images: string[];
   availableQuantity: number;
   status?: OfferStatus;
   rejectionReason?: string;
+
+  // Design guide mapping extensions
+  structuredImages?: OfferImage[];
+  availabilityCalendar?: AvailabilityPeriod[];
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  creatorId?: string;
+  modifierId?: string;
+  validatorId?: string;
+  visibility?: 'public' | 'private';
+  displayOrder?: number;
+  usageInfo?: string;
 }
 
 export type BookingStatus = 'pending' | 'approved' | 'rejected';

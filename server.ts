@@ -243,6 +243,12 @@ app.post('/api/auth/register', (req, res) => {
   res.status(201).json({ user: userWithoutPassword });
 });
 
+app.get('/api/auth/users', (req, res) => {
+  const db = loadDatabase();
+  const safeUsers = db.users.map(({ password, ...u }) => u);
+  res.json(safeUsers);
+});
+
 // 2. Destinations API
 app.get('/api/destinations', (req, res) => {
   res.json(INITIAL_DESTINATIONS);
@@ -255,7 +261,10 @@ app.get('/api/establishments', (req, res) => {
 });
 
 app.post('/api/establishments', (req, res) => {
-  const { name, description, location, type, ownerId, amenities, contactEmail, contactPhone, images } = req.body;
+  const { 
+    name, description, location, type, ownerId, amenities, contactEmail, contactPhone, images,
+    status, coordinates, visibility, displayOrder, usageInfo, creatorId
+  } = req.body;
   const db = loadDatabase();
 
   const newEstablishment: Establishment = {
@@ -265,12 +274,20 @@ app.post('/api/establishments', (req, res) => {
     location: location as SenegalDestination,
     type,
     ownerId,
-    status: 'pending', // Starts pending, needs admin approval
+    status: status || 'pending', // Starts draft or pending
     images: images && images.length > 0 ? images : ['https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'],
     rating: 0,
     amenities: amenities || [],
     contactEmail,
     contactPhone,
+    
+    // Design guide extensions
+    coordinates,
+    creatorId: creatorId || ownerId,
+    modifierId: creatorId || ownerId,
+    visibility: visibility || 'public',
+    displayOrder: displayOrder !== undefined ? Number(displayOrder) : 0,
+    usageInfo: usageInfo || "Fiche descriptive de l'établissement",
   };
 
   db.establishments.push(newEstablishment);
@@ -285,10 +302,10 @@ app.post('/api/establishments', (req, res) => {
   res.status(201).json({ establishment: newEstablishment });
 });
 
-// Approve/Reject establishment (Admin only)
+// Approve/Reject/Archive establishment (Admin only or authorized action)
 app.put('/api/establishments/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status } = req.body; // 'approved' | 'rejected'
+  const { status, validatorId } = req.body; // 'draft' | 'pending' | 'approved' | 'rejected' | 'archived'
   const db = loadDatabase();
 
   const estIndex = db.establishments.findIndex(e => e.id === id);
@@ -297,6 +314,9 @@ app.put('/api/establishments/:id/status', (req, res) => {
   }
 
   db.establishments[estIndex].status = status;
+  if (validatorId) {
+    db.establishments[estIndex].validatorId = validatorId;
+  }
   saveDatabase(db);
   res.json({ establishment: db.establishments[estIndex] });
 });
@@ -304,7 +324,10 @@ app.put('/api/establishments/:id/status', (req, res) => {
 // Update establishment details (Professional owners)
 app.put('/api/establishments/:id', (req, res) => {
   const { id } = req.params;
-  const { name, description, amenities, contactEmail, contactPhone, images } = req.body;
+  const { 
+    name, description, amenities, contactEmail, contactPhone, images,
+    status, coordinates, visibility, displayOrder, usageInfo, modifierId
+  } = req.body;
   const db = loadDatabase();
 
   const estIndex = db.establishments.findIndex(e => e.id === id);
@@ -320,9 +343,18 @@ app.put('/api/establishments/:id', (req, res) => {
   if (contactPhone !== undefined) est.contactPhone = contactPhone;
   if (images !== undefined) est.images = images;
 
-  // Reverting to pending state upon modification? The prompt says "L'hébergeur reçoit la raison du refus. Il peut corriger son offre puis la republier."
-  // Wait, if an establishment is modified, we could optionally reset status to 'pending' or keep it. Let's reset it to pending to trigger re-validation if they corrected it!
-  est.status = 'pending';
+  // Design guide extensions
+  if (status !== undefined) est.status = status;
+  if (coordinates !== undefined) est.coordinates = coordinates;
+  if (visibility !== undefined) est.visibility = visibility;
+  if (displayOrder !== undefined) est.displayOrder = Number(displayOrder);
+  if (usageInfo !== undefined) est.usageInfo = usageInfo;
+  if (modifierId !== undefined) est.modifierId = modifierId;
+
+  // If status is not explicitly set, modify action changes approved/rejected to pending for re-validation
+  if (status === undefined) {
+    est.status = 'pending';
+  }
 
   saveDatabase(db);
   res.json({ establishment: est });
@@ -343,7 +375,10 @@ app.get('/api/establishments/:id/offers', (req, res) => {
 
 app.post('/api/establishments/:id/offers', (req, res) => {
   const { id } = req.params;
-  const { title, description, price, capacity, services, images, availableQuantity } = req.body;
+  const { 
+    title, description, price, promoPrice, currency, capacity, services, images, availableQuantity,
+    status, structuredImages, availabilityCalendar, coordinates, visibility, displayOrder, usageInfo, creatorId
+  } = req.body;
   const db = loadDatabase();
 
   const newOffer: Offer = {
@@ -352,12 +387,29 @@ app.post('/api/establishments/:id/offers', (req, res) => {
     title,
     description,
     price: Number(price),
+    promoPrice: promoPrice !== undefined ? Number(promoPrice) : undefined,
+    currency: currency || 'FCFA',
     capacity: Number(capacity),
     services: services || [],
     images: images && images.length > 0 ? images : ['https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'],
     availableQuantity: Number(availableQuantity) || 1,
-    status: 'pending', // Starts pending, needs admin approval
+    status: status || 'pending', // Starts pending or draft
     rejectionReason: '',
+
+    // Design guide mapping extensions
+    structuredImages: structuredImages || (images || []).map((url: string, index: number) => ({
+      url,
+      legend: "Photo de l'offre",
+      order: index,
+      isCover: index === 0
+    })),
+    availabilityCalendar: availabilityCalendar || [],
+    coordinates: coordinates || undefined,
+    creatorId: creatorId || undefined,
+    modifierId: creatorId || undefined,
+    visibility: visibility || 'public',
+    displayOrder: displayOrder !== undefined ? Number(displayOrder) : 0,
+    usageInfo: usageInfo || "Offre d'hébergement ou de circuit",
   };
 
   db.offers.push(newOffer);
@@ -368,7 +420,7 @@ app.post('/api/establishments/:id/offers', (req, res) => {
 // Update offer validation status (Admin only)
 app.put('/api/offers/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status, rejectionReason } = req.body; // 'approved' | 'rejected'
+  const { status, rejectionReason, validatorId } = req.body; // 'approved' | 'rejected' | 'archived' etc
   const db = loadDatabase();
 
   const offerIndex = db.offers.findIndex(o => o.id === id);
@@ -377,6 +429,9 @@ app.put('/api/offers/:id/status', (req, res) => {
   }
 
   db.offers[offerIndex].status = status;
+  if (validatorId) {
+    db.offers[offerIndex].validatorId = validatorId;
+  }
   if (status === 'rejected') {
     db.offers[offerIndex].rejectionReason = rejectionReason || 'Qualité du contenu insuffisante ou informations incomplètes.';
   } else {
@@ -390,7 +445,10 @@ app.put('/api/offers/:id/status', (req, res) => {
 // Update offer details (Professional owners)
 app.put('/api/offers/:id', (req, res) => {
   const { id } = req.params;
-  const { title, description, price, capacity, services, availableQuantity, images } = req.body;
+  const { 
+    title, description, price, promoPrice, currency, capacity, services, availableQuantity, images,
+    status, structuredImages, availabilityCalendar, coordinates, visibility, displayOrder, usageInfo, modifierId
+  } = req.body;
   const db = loadDatabase();
 
   const offerIndex = db.offers.findIndex(o => o.id === id);
@@ -402,14 +460,28 @@ app.put('/api/offers/:id', (req, res) => {
   if (title !== undefined) offer.title = title;
   if (description !== undefined) offer.description = description;
   if (price !== undefined) offer.price = Number(price);
+  if (promoPrice !== undefined) offer.promoPrice = promoPrice !== null ? Number(promoPrice) : undefined;
+  if (currency !== undefined) offer.currency = currency;
   if (capacity !== undefined) offer.capacity = Number(capacity);
   if (services !== undefined) offer.services = services;
   if (availableQuantity !== undefined) offer.availableQuantity = Number(availableQuantity);
   if (images !== undefined) offer.images = images;
 
-  // Resubmit for approval upon modification
-  offer.status = 'pending';
-  offer.rejectionReason = '';
+  // Design guide extensions
+  if (status !== undefined) offer.status = status;
+  if (structuredImages !== undefined) offer.structuredImages = structuredImages;
+  if (availabilityCalendar !== undefined) offer.availabilityCalendar = availabilityCalendar;
+  if (coordinates !== undefined) offer.coordinates = coordinates;
+  if (visibility !== undefined) offer.visibility = visibility;
+  if (displayOrder !== undefined) offer.displayOrder = Number(displayOrder);
+  if (usageInfo !== undefined) offer.usageInfo = usageInfo;
+  if (modifierId !== undefined) offer.modifierId = modifierId;
+
+  // If status is not explicitly set, modify action changes approved/rejected/draft to pending for re-validation
+  if (status === undefined) {
+    offer.status = 'pending';
+    offer.rejectionReason = '';
+  }
 
   saveDatabase(db);
   res.json(offer);
