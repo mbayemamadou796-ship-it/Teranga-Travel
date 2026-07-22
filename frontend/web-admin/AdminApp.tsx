@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Establishment, Offer, Booking, User as UserType } from '../../shared/types';
 import { TerangaLogo } from '../../shared/ui/TerangaLogo';
+import AdminCommunityManager from './AdminCommunityManager';
 
 interface AdminAppProps {
   currentUser: UserType | null;
@@ -31,7 +32,8 @@ export default function AdminApp({
   const [allUsers, setAllUsers] = useState<UserType[]>([]);
   
   // Tab for different admin subsections
-  const [adminTab, setAdminTab] = useState<'approvals' | 'offers' | 'users' | 'bookings' | 'mapping'>('approvals');
+  const [adminTab, setAdminTab] = useState<'approvals' | 'offers' | 'users' | 'bookings' | 'mapping' | 'dossiers_mirror' | 'communities'>('approvals');
+  const [selectedMirrorOfferId, setSelectedMirrorOfferId] = useState<string | null>(null);
   
   // Rejection Reason dialog state
   const [rejectingOfferId, setRejectingOfferId] = useState<string | null>(null);
@@ -112,11 +114,7 @@ export default function AdminApp({
   };
 
   // Group pending profiles
-  const pendingProfiles = establishments.filter(e => e.status === 'pending');
-  const activeProfiles = establishments.filter(e => e.status === 'approved');
-
   // Group pending offers
-  const pendingOffers = allOffers.filter(o => (o.status || 'approved') === 'pending');
   const activeOffers = allOffers.filter(o => (o.status || 'approved') === 'approved');
 
   // Calculate high-level statistics
@@ -125,41 +123,48 @@ export default function AdminApp({
   const totalApprovedBookings = allBookings.filter(b => b.status === 'approved');
   const globalTurnover = totalApprovedBookings.reduce((sum, b) => sum + b.totalPrice, 0);
 
+  // Derived counts for Admin console
+  const pendingProfiles = establishments.filter(e => e.status === 'pending');
+  const activeProfiles = establishments.filter(e => e.status === 'approved');
+  const pendingOffers = allOffers.filter(o => o.status === 'pending');
+  const approvedOffers = allOffers.filter(o => o.status === 'approved');
+  const approvedEstablishments = activeProfiles;
+
   // Auth gate if not admin
   if (!currentUser || currentUser.role !== 'admin') {
     return (
       <div id="admin-auth-gate" className="max-w-4xl mx-auto space-y-8 animate-fade-in py-12 flex flex-col items-center">
-        <TerangaLogo size={88} showText={true} textPosition="bottom" className="mb-2 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm" />
+        <TerangaLogo size={88} showText={true} textPosition="bottom" className="mb-2 bg-slate-900 text-white p-4 rounded-3xl border border-blue-900 shadow-xl" />
         <div className="text-center max-w-2xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-1.5 rounded-full border border-slate-800 font-sans font-medium text-xs tracking-wider uppercase">
-            🛡️ Application Web Administration
+          <div className="inline-flex items-center gap-2 bg-blue-900 text-sky-300 px-4 py-1.5 rounded-full border border-blue-700 font-sans font-bold text-xs tracking-wider uppercase">
+            🛡️ ESPACE ADMINISTRATION NATIONALE D'ÉTAT
           </div>
           <h2 className="font-sans font-bold text-3xl text-gray-900 tracking-tight">
-            Console d'Administration Globale
+            Console de Supervision Nationale & Sécurité
           </h2>
           <p className="text-gray-600 text-sm leading-relaxed">
-            Espace sécurisé de validation, de modération et d'analyse statistique de la plateforme Teranga Travel. Réservé aux gestionnaires agréés.
+            Espace sécurisé de régulation, de modération et d'homologation d'État de la plateforme Teranga Travel.
           </p>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-lg max-w-xl mx-auto space-y-6 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-700 mx-auto">
-            <Shield size={28} />
+        <div className="bg-[#0B1A30] text-white p-8 rounded-3xl border border-blue-900 shadow-2xl max-w-xl mx-auto space-y-6 text-center">
+          <div className="w-16 h-16 bg-blue-900/60 text-sky-400 rounded-2xl flex items-center justify-center border border-blue-700/50 mx-auto">
+            <Shield size={32} />
           </div>
           <div className="space-y-2">
-            <h3 className="font-sans font-bold text-lg text-gray-900">Accès Administrateur Restreint</h3>
-            <p className="text-gray-500 text-xs leading-relaxed max-w-sm mx-auto">
-              Veuillez vous connecter avec vos identifiants d'administration pour valider les publications et surveiller les réservations.
+            <h3 className="font-sans font-bold text-lg text-white">Accès Console de Régulation Restreint</h3>
+            <p className="text-slate-300 text-xs leading-relaxed max-w-sm mx-auto">
+              Veuillez vous connecter avec vos identifiants d'administration pour valider les agréments d'État et surveiller les flux.
             </p>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 space-y-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Identifiant d'accès rapide :</p>
+          <div className="pt-4 border-t border-blue-900/60 space-y-3">
+            <p className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Accès Administrateur d'État (SYSOP) :</p>
             <button
               onClick={() => onDirectLogin('admin@teranga.sn', 'admin')}
-              className="w-full bg-slate-950 hover:bg-slate-900 text-white font-sans font-bold py-3 px-6 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-sans font-bold py-3 px-6 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
             >
-              <span>🔑 Se connecter en tant que Modou Sow (Admin)</span>
+              <span>🔑 Se connecter en tant que Modou Sow (Admin SYSOP)</span>
               <Check size={14} />
             </button>
           </div>
@@ -169,128 +174,205 @@ export default function AdminApp({
   }
 
   return (
-    <div id="app-admin-root" className="space-y-8 animate-fade-in">
+    <div id="app-admin-root" className="space-y-6 animate-fade-in font-sans">
       
-      {/* Top Banner stats */}
-      <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-850 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md">
-        <div className="flex items-center gap-4">
-          <TerangaLogo size={52} showText={false} className="bg-slate-800 p-1.5 rounded-2xl border border-slate-700 shrink-0" />
+      {/* PHOTO 2 HEADER: ADMIN NATIONAL BLUE THEME */}
+      <div className="bg-[#0B1A30] text-white p-5 md:p-6 rounded-3xl border border-blue-900/60 shadow-2xl space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-blue-900/40 pb-4">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold tracking-widest uppercase bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
-              🛡️ App Administrateur
+            <span className="text-[11px] font-bold text-sky-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+              • ESPACE ADMINISTRATION NATIONALE D'ÉTAT
             </span>
-            <h2 className="font-sans font-bold text-2xl tracking-tight">Supervision Générale</h2>
-            <p className="text-slate-400 text-xs">Administrateur connecté : <b>Modou Sow</b> • Contrôle total de la plateforme</p>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-3">
+              <TerangaLogo size={32} showText={false} className="bg-blue-950 p-1 rounded-xl border border-blue-800 shrink-0" />
+              Teranga Travel — Console de Supervision Nationale
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-950/80 border border-blue-800/80 px-3 py-1.5 rounded-2xl flex items-center gap-2 text-xs">
+              <span className="text-slate-300 font-medium">Administration Centrale (SYSOP)</span>
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-inner">
+                AD
+              </div>
+            </div>
+            <button
+              onClick={fetchAdminData}
+              className="p-2 bg-blue-900/80 hover:bg-blue-800 text-blue-200 rounded-xl border border-blue-700/60 transition-colors cursor-pointer"
+              title="Actualiser la console"
+            >
+              <RefreshCw size={16} />
+            </button>
           </div>
         </div>
 
-        <button
-          onClick={fetchAdminData}
-          className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
-        >
-          <RefreshCw size={14} />
-          Actualiser les données
-        </button>
+        {/* PHOTO 2 BLUE HERO BANNER WITH 4 STAT CARDS */}
+        <div className="bg-[#081325] p-6 rounded-2xl border border-blue-900/80 space-y-6 relative overflow-hidden">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div>
+              <span className="bg-blue-900/60 text-sky-300 text-[10px] font-bold px-3 py-1 rounded-full border border-blue-700/50 uppercase tracking-wider inline-block mb-2">
+                ESPACE DE REGULATION ET CONTRÔLE SUPRÊME
+              </span>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                Console de Régulation Nationale d'État
+              </h2>
+              <p className="text-slate-300 text-xs md:text-sm mt-1 max-w-2xl leading-relaxed">
+                Modérez les soumissions d'offres privées/publiques, gérez la communauté et suivez l'insertion & l'homologation des acteurs touristiques du Sénégal.
+              </p>
+            </div>
+          </div>
+
+          {/* 4 STAT CARDS INSIDE BLUE HERO BANNER */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-[#0d1e38] p-4 rounded-xl border border-blue-800/60 space-y-1.5 shadow-sm">
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Shield size={12} /> OFFRES ACTIVES
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-white">{approvedOffers.length}</span>
+                <span className="text-[11px] text-amber-400 font-medium">({pendingOffers.length} en attente)</span>
+              </div>
+            </div>
+
+            <div className="bg-[#0d1e38] p-4 rounded-xl border border-blue-800/60 space-y-1.5 shadow-sm">
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Building size={12} /> PRESTATAIRES HOMOLOGUÉS
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-white">{approvedEstablishments.length}</span>
+                <span className="text-[11px] text-amber-400 font-medium">({pendingProfiles.length} en attente)</span>
+              </div>
+            </div>
+
+            <div className="bg-[#0d1e38] p-4 rounded-xl border border-blue-800/60 space-y-1.5 shadow-sm">
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Users size={12} /> CITOYENS ACTIFS
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-white">{allUsers.length}</span>
+                <span className="text-[11px] text-sky-300 font-medium">enregistrés</span>
+              </div>
+            </div>
+
+            <div className="bg-[#0d1e38] p-4 rounded-xl border border-blue-800/60 space-y-1.5 shadow-sm">
+              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <AlertCircle size={12} /> SIGNALEMENTS FORUM
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-white">{pendingProfiles.length + pendingOffers.length}</span>
+                <span className="text-[11px] text-rose-300 font-medium">tickets d'assistance</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Summary Panel */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Chiffre d'Affaires Global</span>
-          <div className="flex items-center justify-between">
-            <span className="font-mono font-bold text-base text-gray-900">{globalTurnover.toLocaleString('fr-FR')} FCFA</span>
-            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-700">
-              <DollarSign size={18} />
+      {/* PHOTO 2 ALERT BANNER */}
+      <div className="bg-amber-50 border border-amber-200/80 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <span className="text-xl">🔔</span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-amber-900 text-sm">Alertes de Modération & Demandes de Validation d'État</h3>
+              <span className="bg-amber-200/80 text-amber-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-amber-300">
+                {pendingProfiles.length + pendingOffers.length} REQUÊTES EN ATTENTE
+              </span>
             </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Hébergements Enregistrés</span>
-          <div className="flex items-center justify-between">
-            <span className="font-sans font-bold text-xl text-gray-900">{totalHostProfiles}</span>
-            <div className="p-2 bg-blue-50 rounded-lg text-blue-700">
-              <Building size={18} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Agences & Guides</span>
-          <div className="flex items-center justify-between">
-            <span className="font-sans font-bold text-xl text-gray-900">{totalAgencyGuides}</span>
-            <div className="p-2 bg-amber-50 rounded-lg text-amber-700">
-              <Sliders size={18} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Demandes en attente</span>
-          <div className="flex items-center justify-between">
-            <span className="font-sans font-bold text-xl text-amber-700">{pendingProfiles.length + pendingOffers.length}</span>
-            <div className="p-2 bg-rose-50 rounded-lg text-rose-700">
-              <AlertCircle size={18} />
-            </div>
+            <p className="text-amber-800 text-xs mt-0.5">
+              Validez ou rejetez les demandes d'agrément des organismes, coachs, guides et offres pour les synchroniser en temps réel.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Segmented Admin Navigation */}
-      <div className="flex border-b border-gray-200 gap-4">
+      {/* PHOTO 2 BLUE SEGMENTED NAVIGATION BAR */}
+      <div className="bg-white p-2 rounded-2xl border border-gray-200 shadow-xs flex flex-wrap gap-1">
         <button
           onClick={() => setAdminTab('approvals')}
-          className={`pb-3.5 text-xs font-bold transition-all relative cursor-pointer ${
-            adminTab === 'approvals' ? 'text-slate-900' : 'text-gray-400 hover:text-gray-600'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'approvals'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          Validation Fiches Profils ({pendingProfiles.length})
-          {adminTab === 'approvals' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
+          <Shield size={14} /> Validation Fiches ({pendingProfiles.length})
         </button>
 
         <button
           onClick={() => setAdminTab('offers')}
-          className={`pb-3.5 text-xs font-bold transition-all relative cursor-pointer ${
-            adminTab === 'offers' ? 'text-slate-900' : 'text-gray-400 hover:text-gray-600'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'offers'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          Validation Offres & Circuits ({pendingOffers.length})
-          {adminTab === 'offers' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
+          <Sliders size={14} /> Validation Offres & Circuits ({pendingOffers.length})
         </button>
 
         <button
           onClick={() => setAdminTab('users')}
-          className={`pb-3.5 text-xs font-bold transition-all relative cursor-pointer ${
-            adminTab === 'users' ? 'text-slate-900' : 'text-gray-400 hover:text-gray-600'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'users'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          Membres Écosystème ({allUsers.length})
-          {adminTab === 'users' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
+          <Users size={14} /> Utilisateurs ({allUsers.length})
         </button>
 
         <button
           onClick={() => setAdminTab('bookings')}
-          className={`pb-3.5 text-xs font-bold transition-all relative cursor-pointer ${
-            adminTab === 'bookings' ? 'text-slate-900' : 'text-gray-400 hover:text-gray-600'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'bookings'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          Suivi des Réservations ({allBookings.length})
-          {adminTab === 'bookings' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
+          <Calendar size={14} /> Réservations ({allBookings.length})
         </button>
 
         <button
           onClick={() => setAdminTab('mapping')}
-          className={`pb-3.5 text-xs font-bold transition-all relative cursor-pointer ${
-            adminTab === 'mapping' ? 'text-slate-900' : 'text-gray-400 hover:text-gray-600'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'mapping'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           🗂️ Fiche de Mapping (Données)
-          {adminTab === 'mapping' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
+        </button>
+
+        <button
+          onClick={() => setAdminTab('dossiers_mirror')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'dossiers_mirror'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          📁 Dossiers Clients & Miroir Pro ({allOffers.length})
+        </button>
+
+        <button
+          onClick={() => setAdminTab('communities')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'communities'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <MessageSquare size={14} /> Communautés & Modération
         </button>
       </div>
 
       {/* Tab Panels */}
       <div className="space-y-6">
+        
+        {/* TAB COMMUNITIES */}
+        {adminTab === 'communities' && (
+          <AdminCommunityManager />
+        )}
         
         {/* TAB 1: VALIDATION DE PROFILS/ÉTABLISSEMENTS */}
         {adminTab === 'approvals' && (
@@ -879,6 +961,144 @@ export default function AdminApp({
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 6: DOSSIERS CLIENTS & MIROIR DES AUTRES APPLICATIONS */}
+        {adminTab === 'dossiers_mirror' && (
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs space-y-6">
+            <div className="border-b border-gray-100 pb-4">
+              <span className="bg-blue-100 text-blue-900 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-200 uppercase tracking-wider inline-block mb-2">
+                📁 ADMINISTRATION MIROIR DES APPLICATIONS
+              </span>
+              <h3 className="font-sans font-bold text-lg text-gray-900 flex items-center gap-2">
+                <Sliders className="text-blue-700" size={20} />
+                Dossiers d'Offres & Synchronisation Miroir
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                L'administration reflète fidèlement la structure des applications Hébergeurs, Agences et Touristes. Consultez chaque dossier d'offre et la liste des touristes inscrits en temps réel.
+              </p>
+            </div>
+
+            {/* Offer Selector Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {allOffers.map(off => {
+                const count = allBookings.filter(b => b.offerId === off.id).length;
+                const isSelected = (selectedMirrorOfferId === off.id) || (!selectedMirrorOfferId && off === allOffers[0]);
+                const parentEst = establishments.find(e => e.id === off.establishmentId);
+                return (
+                  <button
+                    key={off.id}
+                    onClick={() => setSelectedMirrorOfferId(off.id)}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-2 ${
+                      isSelected ? 'bg-blue-900 text-white border-blue-800 shadow-md' : 'bg-gray-50 hover:bg-gray-100 text-gray-800 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                        isSelected ? 'bg-blue-800 text-blue-200' : 'bg-white text-gray-600 border border-gray-200'
+                      }`}>
+                        {parentEst ? parentEst.type.toUpperCase() : 'OFFRE'}
+                      </span>
+                      <span className={`text-xs font-bold ${isSelected ? 'text-blue-300' : 'text-blue-700'}`}>
+                        {count} dossier(s) client
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-xs truncate">{off.title}</h4>
+                    <p className={`text-[10px] ${isSelected ? 'text-blue-200' : 'text-gray-500'}`}>
+                      Établissement : {parentEst ? parentEst.name : 'Inconnu'}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Mirror Offer Dossier */}
+            {allOffers.length > 0 && (() => {
+              const currentOffer = allOffers.find(o => o.id === selectedMirrorOfferId) || allOffers[0];
+              const mirrorBookings = allBookings.filter(b => b.offerId === currentOffer.id);
+              const parentEst = establishments.find(e => e.id === currentOffer.establishmentId);
+
+              return (
+                <div className="bg-blue-50/40 border border-blue-100 p-6 rounded-3xl space-y-6">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-2xl border border-blue-100 shadow-xs">
+                    <div>
+                      <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Vue Miroir Fiche Offre</span>
+                      <h4 className="text-xl font-bold text-gray-900">{currentOffer.title}</h4>
+                      <p className="text-xs text-gray-500">Établissement rattaché : <b>{parentEst?.name}</b> ({parentEst?.location.toUpperCase()})</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-bold px-3 py-1.5 rounded-full border uppercase ${
+                        currentOffer.status === 'approved' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                        currentOffer.status === 'rejected' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                        'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}>
+                        {currentOffer.status === 'approved' ? '✓ Publiée & Synchronisée' : currentOffer.status === 'rejected' ? '✗ Refusée' : '⏰ En attente'}
+                      </span>
+                      <div className="bg-blue-900 text-white px-4 py-2 rounded-xl text-xs font-mono font-bold">
+                        {currentOffer.price.toLocaleString('fr-FR')} {currentOffer.currency || 'FCFA'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Registered Tourists Mirror Table */}
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-sm text-gray-900 flex items-center gap-2">
+                      <Users size={16} className="text-blue-700" />
+                      Dossiers Clients Synchronisés ({mirrorBookings.length})
+                    </h4>
+
+                    {mirrorBookings.length === 0 ? (
+                      <div className="bg-white p-8 rounded-2xl text-center text-xs text-gray-400 border border-gray-200">
+                        Aucune réservation enregistrée sur cette offre dans le réseau Teranga.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {mirrorBookings.map(book => (
+                          <div key={book.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                              <div>
+                                <span className="text-[10px] font-bold text-gray-400 block uppercase">Fiche Client Touriste</span>
+                                <span className="font-bold text-sm text-gray-900">{book.touristName}</span>
+                                <span className="text-xs text-gray-500 block">📧 Contact : {book.touristEmail}</span>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase ${
+                                book.status === 'approved' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                book.status === 'rejected' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                                'bg-amber-50 text-amber-800 border-amber-200'
+                              }`}>
+                                {book.status === 'approved' ? '✓ Séjour Confirmé' : book.status === 'rejected' ? '✗ Décliné' : '⏰ En Attente Prestataire'}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                              <div>
+                                <span className="text-[10px] text-gray-400 block font-semibold">Période du séjour</span>
+                                <span className="font-mono text-gray-800">{book.checkIn} → {book.checkOut}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-gray-400 block font-semibold">Nombre de personnes</span>
+                                <span className="font-bold text-gray-800">{book.guestsCount} pers.</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-gray-400 block font-semibold">Total calculé</span>
+                                <span className="font-mono font-bold text-blue-800">{book.totalPrice.toLocaleString('fr-FR')} FCFA</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-gray-400 block font-semibold">Reglement</span>
+                                <span className="bg-blue-100 text-blue-900 text-[10px] font-extrabold px-2 py-0.5 rounded border border-blue-200 inline-block">
+                                  Paiement sur place
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 

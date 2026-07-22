@@ -18,12 +18,14 @@ import BookingModal from '../shared/ui/BookingModal';
 import HostApp from './web-host/HostApp';
 import CircuitsApp from './web-circuits/CircuitsApp';
 import AdminApp from './web-admin/AdminApp';
+import CommunityModule from './components/CommunityModule';
 import { TerangaLogo } from '../shared/ui/TerangaLogo';
+import MessagingWidget from '../shared/ui/MessagingWidget';
 
 export default function App() {
   // Navigation & Routing State
   const [activeApp, setActiveApp] = useState<'tourist' | 'hebergeurs' | 'circuits_guides' | 'admin'>('tourist');
-  const [activeTab, setActiveTab] = useState<'destinations' | 'establishments' | 'ai-planner' | 'dashboard'>('destinations');
+  const [activeTab, setActiveTab] = useState<'destinations' | 'establishments' | 'ai-planner' | 'community' | 'dashboard'>('destinations');
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   
@@ -73,6 +75,80 @@ export default function App() {
   // Global loading states
   const [loadingEst, setLoadingEst] = useState(false);
   const [loadingOffers, setLoadingOffers] = useState(false);
+
+  // Tourist Profile Editing State
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileRegion, setProfileRegion] = useState<SenegalDestination>('Dakar');
+  const [profileBio, setProfileBio] = useState('');
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+
+  // Sync profile fields when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      setProfileName(currentUser.name || '');
+      setProfileEmail(currentUser.email || '');
+      setProfilePhone(currentUser.phone || '');
+      setProfileRegion(currentUser.preferredRegion || 'Dakar');
+      setProfileBio(currentUser.bio || '');
+    }
+  }, [currentUser]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          name: profileName,
+          email: profileEmail,
+          phone: profilePhone,
+          preferredRegion: profileRegion,
+          bio: profileBio,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data.user);
+        localStorage.setItem('teranga_user', JSON.stringify(data.user));
+        setProfileSaveSuccess(true);
+        setTimeout(() => setProfileSaveSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+    }
+  };
+
+  const handleToggleSaveOffer = async (offerId: string) => {
+    if (!currentUser) return;
+    const currentSaved = currentUser.savedOfferIds || [];
+    const isSaved = currentSaved.includes(offerId);
+    const newSaved = isSaved
+      ? currentSaved.filter(id => id !== offerId)
+      : [...currentSaved, offerId];
+
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          savedOfferIds: newSaved,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data.user);
+        localStorage.setItem('teranga_user', JSON.stringify(data.user));
+      }
+    } catch (err) {
+      console.error('Failed to toggle save offer:', err);
+    }
+  };
 
   // Load User session from LocalStorage
   useEffect(() => {
@@ -447,6 +523,7 @@ export default function App() {
               { id: 'destinations', label: 'Destinations', icon: Compass },
               { id: 'establishments', label: 'Hébergements', icon: Building },
               { id: 'ai-planner', label: 'Circuits & Guides', icon: ClipboardList },
+              { id: 'community', label: 'Communauté', icon: Users },
               { id: 'dashboard', label: 'Mon Espace', icon: User }
             ].map((tab) => {
               const Icon = tab.icon;
@@ -521,7 +598,8 @@ export default function App() {
             { id: 'destinations', label: 'Découvrir', icon: Compass },
             { id: 'establishments', label: 'Séjours', icon: Building },
             { id: 'ai-planner', label: 'Circuits', icon: ClipboardList },
-            { id: 'dashboard', label: 'Mon Espace', icon: User }
+            { id: 'community', label: 'Forum', icon: Users },
+            { id: 'dashboard', label: 'Espace', icon: User }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -1434,6 +1512,162 @@ export default function App() {
                 {/* ROLE SUB-VIEW A: TOURIST DASHBOARD */}
                 {currentUser.role === 'tourist' && (
                   <div className="space-y-8 animate-fade-in">
+                    
+                    {/* 1. MON ESPACE : MODIFICATION DU PROFIL & COORDONNÉES */}
+                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs space-y-6">
+                      <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+                        <h3 className="font-sans font-bold text-base text-gray-900 flex items-center gap-2">
+                          <User className="text-emerald-700" size={18} />
+                          Mon Espace : Mes Coordonnées & Préférences
+                        </h3>
+                        {profileSaveSuccess && (
+                          <span className="text-xs bg-emerald-50 text-emerald-800 font-bold px-3 py-1 rounded-full border border-emerald-200 animate-pulse">
+                            ✓ Coordonnées mises à jour avec succès !
+                          </span>
+                        )}
+                      </div>
+
+                      <form onSubmit={handleSaveProfile} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Nom Complet</label>
+                            <input
+                              type="text"
+                              required
+                              value={profileName}
+                              onChange={(e) => setProfileName(e.target.value)}
+                              className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2.5 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Adresse E-mail</label>
+                            <input
+                              type="email"
+                              required
+                              value={profileEmail}
+                              onChange={(e) => setProfileEmail(e.target.value)}
+                              className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2.5 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Numéro de Téléphone / WhatsApp</label>
+                            <input
+                              type="text"
+                              placeholder="Ex: +221 77 000 00 00"
+                              value={profilePhone}
+                              onChange={(e) => setProfilePhone(e.target.value)}
+                              className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2.5 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Région Préférée au Sénégal</label>
+                            <select
+                              value={profileRegion}
+                              onChange={(e) => setProfileRegion(e.target.value as SenegalDestination)}
+                              className="w-full bg-gray-50 border border-gray-200 px-3.5 py-2.5 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
+                            >
+                              <option value="Dakar">Dakar (Presqu'île & Île de Gorée)</option>
+                              <option value="Sine Saloum">Sine Saloum (Bolongs & Îles)</option>
+                              <option value="Casamance">Casamance (Cap Skirring & Ziguinchor)</option>
+                              <option value="Saint-Louis">Saint-Louis (Ndar & Djoudj)</option>
+                              <option value="Kédougou">Kédougou (Cascade de Dindéfélo & Bassari)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Ma Présentation / Centres d'intérêt</label>
+                          <textarea
+                            rows={2}
+                            placeholder="Ex: Passionné d'éco-tourisme, de randonnées culturelles et de gastronomie sénégalaise..."
+                            value={profileBio}
+                            onChange={(e) => setProfileBio(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white resize-none"
+                          />
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                          <button
+                            type="submit"
+                            className="bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-xs cursor-pointer"
+                          >
+                            Enregistrer les modifications
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+
+                    {/* 2. OFFRES & CIRCUITS ENREGISTRÉS (SYNCHRONISÉS) */}
+                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs space-y-6">
+                      <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+                        <h3 className="font-sans font-bold text-base text-gray-900 flex items-center gap-2">
+                          <Heart className="text-rose-500 fill-rose-500" size={18} />
+                          Mes Offres & Circuits Enregistrés ({(currentUser.savedOfferIds || []).length})
+                        </h3>
+                        <span className="text-xs text-gray-400 font-mono">Synchro en temps réel</span>
+                      </div>
+
+                      {!(currentUser.savedOfferIds && currentUser.savedOfferIds.length > 0) ? (
+                        <div className="text-center py-10 bg-gray-50/50 rounded-2xl text-xs text-gray-500">
+                          Vous n'avez pas encore enregistré d'offre ou de circuit favori. Parcourez les établissements pour en sauvegarder.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {establishments.flatMap(e => e).map((est) => null)}
+                          {/* Render saved offer cards */}
+                          {currentUser.savedOfferIds.map(savedId => {
+                            let foundOffer: Offer | null = null;
+                            let parentEst: Establishment | null = null;
+
+                            // Search through establishments if loaded
+                            for (const est of establishments) {
+                              // If matching offer
+                              if (est.id === savedId) {
+                                parentEst = est;
+                                break;
+                              }
+                            }
+
+                            return (
+                              <div key={savedId} className="p-4 rounded-2xl border border-gray-100 bg-emerald-50/20 flex flex-col justify-between gap-3 text-xs">
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md uppercase">
+                                      Offre Enregistrée
+                                    </span>
+                                    <button
+                                      onClick={() => handleToggleSaveOffer(savedId)}
+                                      className="text-rose-600 hover:text-rose-800 text-[10px] font-semibold"
+                                    >
+                                      Retirer
+                                    </button>
+                                  </div>
+                                  <h4 className="font-bold text-gray-900 text-sm mt-1">Offre Teranga #{savedId}</h4>
+                                  <p className="text-gray-500 text-[11px]">Synchronisée en direct avec la base de données des hôtes et agences.</p>
+                                </div>
+
+                                <div className="flex justify-between items-center pt-2 border-t border-emerald-100/60">
+                                  <span className="font-mono text-emerald-700 font-bold">Inclus dans vos favoris</span>
+                                  <button
+                                    onClick={() => {
+                                      setActiveTab('establishments');
+                                    }}
+                                    className="bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                                  >
+                                    Voir l'établissement
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 3. DEMANDES DE RÉSERVATIONS */}
                     <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs space-y-6">
                       <h3 className="font-sans font-bold text-base text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-4">
                         <ClipboardList className="text-emerald-700" size={18} />
@@ -1951,6 +2185,14 @@ export default function App() {
 
           </div>
         )}
+
+        {/* ==================== TAB COMMUNAUTÉ ==================== */}
+        {activeTab === 'community' && (
+          <CommunityModule 
+            currentUser={currentUser} 
+            onNavigateToAuth={() => setActiveTab('dashboard')} 
+          />
+        )}
         </>
         )}
 
@@ -1982,6 +2224,9 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Transversal LinkedIn-style Messaging Widget */}
+      <MessagingWidget currentUser={currentUser} />
 
     </div>
   );

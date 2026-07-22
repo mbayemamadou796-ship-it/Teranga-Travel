@@ -12,6 +12,10 @@ export interface User {
   name: string;
   role: UserRole;
   establishmentId?: string; // Links a professional to their establishment
+  phone?: string;
+  preferredRegion?: SenegalDestination;
+  bio?: string;
+  savedOfferIds?: string[];
 }
 
 export type SenegalDestination = 'Dakar' | 'Sine Saloum' | 'Casamance' | 'Saint-Louis' | 'Kédougou';
@@ -149,3 +153,55 @@ export interface ItineraryRequest {
   budget: 'budget' | 'medium' | 'premium';
   interests: string[];
 }
+
+export interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderEmail: string;
+  senderRole: UserRole;
+  recipientId: string;
+  recipientName: string;
+  recipientEmail: string;
+  content: string;
+  createdAt: string;
+  read?: boolean;
+}
+
+export type CommunityPostCategory = 
+  | 'retours_experience'
+  | 'conseils'
+  | 'questions'
+  | 'photos'
+  | 'bonnes_adresses';
+
+export interface Community {
+  id: string;
+  name: string; // Destination name e.g. "Casamance", "Dakar", "Saint-Louis", "Sine Saloum", "Kédougou", "Cap Skirring", "Île de Gorée", "Lac Rose"
+  region: string;
+  description: string;
+  coverImage: string;
+  active: boolean;
+  postsCount?: number;
+  createdAt: string;
+}
+
+export interface CommunityPost {
+  id: string;
+  communityId: string;
+  destination: string; // SenegalDestination or extended spot name
+  authorId: string;
+  authorName: string;
+  authorRole?: UserRole;
+  title: string;
+  content: string;
+  category: CommunityPostCategory;
+  imageUrl?: string;
+  locationSpot?: string; // e.g. "Plage de Cap Skirring", "Île de Gorée"
+  likesCount: number;
+  reported: boolean;
+  reportReason?: string;
+  status: 'active' | 'masked' | 'deleted';
+  createdAt: string;
+}
+

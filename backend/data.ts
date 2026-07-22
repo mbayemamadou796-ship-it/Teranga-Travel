@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Destination, Establishment, Offer, Review } from '../shared/types';
+import { Destination, Establishment, Offer, Review, Community, CommunityPost } from '../shared/types';
 
 export const INITIAL_DESTINATIONS: Destination[] = [
   {
@@ -558,3 +558,250 @@ export const INITIAL_REVIEWS: Review[] = [
     createdAt: '2025-02-01'
   }
 ];
+
+export const INITIAL_COMMUNITIES: Community[] = [
+  {
+    id: 'comm_casamance',
+    name: 'Casamance',
+    region: 'Région Sud (Ziguinchor & Oussouye)',
+    description: 'Partagez vos séjours en Casamance : conseils sur les pirogues, campements sous les fromagers, plages de sable fin et coutumes royales d\'Oussouye.',
+    coverImage: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 5,
+    createdAt: '2025-01-01'
+  },
+  {
+    id: 'comm_dakar',
+    name: 'Dakar',
+    region: 'Presqu\'île du Cap-Vert',
+    description: 'Espace d\'échange sur la capitale : bons plans galeries d\'art, spots de surf des Almadies, traversées vers Ngor et marchés artisanaux.',
+    coverImage: 'https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 6,
+    createdAt: '2025-01-01'
+  },
+  {
+    id: 'comm_stlouis',
+    name: 'Saint-Louis',
+    region: 'Nord Sénégal',
+    description: 'Découvrez l\'ambiance coloniale, le pont Faidherbe, la Langue de Barbarie et le festival de Jazz de Saint-Louis à travers les yeux des membres.',
+    coverImage: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 4,
+    createdAt: '2025-01-01'
+  },
+  {
+    id: 'comm_saloum',
+    name: 'Sine Saloum',
+    region: 'Région des Îles & Mangroves',
+    description: 'Tout sur les excursions en pirogue dans les bolongs, les îles aux coquillages de Fadiouth, la pêche responsable et l\'observation d\'oiseaux.',
+    coverImage: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 4,
+    createdAt: '2025-01-01'
+  },
+  {
+    id: 'comm_kedougou',
+    name: 'Kédougou',
+    region: 'Sénégal Oriental',
+    description: 'Aventures en Pays Bassari et Bedik, randonnées vers la cascade de Dindéfélo et immersion au cœur du patrimoine naturel.',
+    coverImage: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 3,
+    createdAt: '2025-01-01'
+  },
+  {
+    id: 'comm_cap_skirring',
+    name: 'Cap Skirring',
+    region: 'Littoral de Casamance',
+    description: 'La destination plage par excellence : conseils cocotiers, cours de surf, restaurants de fruits de mer frais et détente absolue.',
+    coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 3,
+    createdAt: '2025-01-02'
+  },
+  {
+    id: 'comm_goree',
+    name: 'Île de Gorée',
+    region: 'Baie de Dakar',
+    description: 'Partages de visites historiques sur l\'île mémoire, galeries de peintres sous les bougainvilliers et nuits paisibles loin des voitures.',
+    coverImage: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 3,
+    createdAt: '2025-01-02'
+  },
+  {
+    id: 'comm_lac_rose',
+    name: 'Lac Rose',
+    region: 'Région de Thiès',
+    description: 'Informations en direct sur le Lac Retba, traversées en pirogue avec les ramasseurs de sel et circuits quad dans les dunes.',
+    coverImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 2,
+    createdAt: '2025-01-03'
+  },
+  {
+    id: 'comm_niokolo_koba',
+    name: 'Parc National du Niokolo-Koba',
+    region: 'Sénégal Oriental',
+    description: 'Communauté des passionnés de faune africaine : safaris, lions, hippopotames et bivouacs sauvages guidés.',
+    coverImage: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=80',
+    active: true,
+    postsCount: 2,
+    createdAt: '2025-01-04'
+  }
+];
+
+export const INITIAL_COMMUNITY_POSTS: CommunityPost[] = [
+  {
+    id: 'post_1',
+    communityId: 'comm_casamance',
+    destination: 'Casamance',
+    authorId: 'user_tourist_1',
+    authorName: 'Fatou Diop',
+    authorRole: 'tourist',
+    title: '5 jours inoubliables à Cap Skirring et Oussouye',
+    content: 'Nous avons passé cinq jours fabuleux à Cap Skirring. Les plages bordées de cocotiers étaient désertes au matin et le campement villageois d\'Elinkine était chaleureux. Un conseil : prenez le temps de vous arrêter à Oussouye pour découvrir les traditions artisanales de vannerie et respecter la forêt sacrée.',
+    category: 'retours_experience',
+    imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+    locationSpot: 'Plage de Cap Skirring & Oussouye',
+    likesCount: 18,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-12T10:30:00Z'
+  },
+  {
+    id: 'post_2',
+    communityId: 'comm_casamance',
+    destination: 'Casamance',
+    authorId: 'user_guide_dakar',
+    authorName: 'Abdoulaye Ndiaye',
+    authorRole: 'professional',
+    title: 'Conseil budget & transport pour rejoindre la Casamance',
+    content: 'Pour les voyageurs souhaitant visiter la Casamance depuis Dakar, la liaison en ferry Aline Sitoé Diatta reste une expérience poétique et très confortable. Pensez à réserver vos cabines 2 à 3 semaines à l\'avance en haute saison (décembre à avril). Pour les plus pressés, le vol Dakar-Ziguinchor dure 45 min.',
+    category: 'conseils',
+    locationSpot: 'Port de Ziguinchor & Ferry Aline Sitoé',
+    likesCount: 24,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-14T14:15:00Z'
+  },
+  {
+    id: 'post_3',
+    communityId: 'comm_casamance',
+    destination: 'Casamance',
+    authorId: 'user_tourist_2',
+    authorName: 'Sébastien L.',
+    authorRole: 'tourist',
+    title: 'Quel guide choisir pour visiter l\'île de Karabane ?',
+    content: 'Bonjour à la communauté ! Nous prévoyons une escapade de 2 jours sur l\'île de Karabane depuis Elinkine. Avez-vous des recommandations pour la pirogue et le meilleur campement historique sur place ? Merci d\'avance !',
+    category: 'questions',
+    locationSpot: 'Île de Karabane',
+    likesCount: 7,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-16T09:00:00Z'
+  },
+  {
+    id: 'post_4',
+    communityId: 'comm_casamance',
+    destination: 'Casamance',
+    authorId: 'user_agency_casamance',
+    authorName: 'Lamine Sané (Ecovoyages)',
+    authorRole: 'professional',
+    title: 'Bonne adresse : Le petit resto Tante Mariama à Ziguinchor',
+    content: 'Avis aux gourmands de passage au port ! Allez tester la soupe de poisson frais et le capitaine grillé avec jus de calicedrat chez Tante Mariama. C\'est frais, authentique et préparé avec les poissons du jour débarqués des pirogues.',
+    category: 'bonnes_adresses',
+    imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+    locationSpot: 'Port de Pêche de Ziguinchor',
+    likesCount: 31,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-17T18:45:00Z'
+  },
+  {
+    id: 'post_5',
+    communityId: 'comm_dakar',
+    destination: 'Dakar',
+    authorId: 'user_tourist_1',
+    authorName: 'Fatou Diop',
+    authorRole: 'tourist',
+    title: 'Coucher de soleil féerique depuis la Pointe des Almadies',
+    content: 'Chaque soir à Dakar se termine en apothéose sur les rochers des Almadies. Déguster des crevettes grillées au piment doux avec le son des vagues de l\'Atlantique est un incontournable de la vie dakaroise.',
+    category: 'photos',
+    imageUrl: 'https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=800&q=80',
+    locationSpot: 'Pointe des Almadies',
+    likesCount: 42,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-10T19:20:00Z'
+  },
+  {
+    id: 'post_6',
+    communityId: 'comm_dakar',
+    destination: 'Dakar',
+    authorId: 'user_prof_dakar',
+    authorName: 'Cheikh Ndiaye',
+    authorRole: 'professional',
+    title: 'Astuce pour prendre la chaloupe de Gorée sans faire la queue',
+    content: 'Conseil pratique d\'un habitant : achetez vos billets de chaloupe la veille au guichet du port de Dakar si vous le pouvez, ou venez dès 07h15 du matin. Vous profiterez d\'une Gorée paisible sans aucun groupe avant 10h !',
+    category: 'conseils',
+    locationSpot: 'Embarcadère de Gorée',
+    likesCount: 39,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-11T08:10:00Z'
+  },
+  {
+    id: 'post_7',
+    communityId: 'comm_stlouis',
+    destination: 'Saint-Louis',
+    authorId: 'user_agency_stlouis',
+    authorName: 'Awa Fall',
+    authorRole: 'professional',
+    title: 'Balade nocturne en caleche à travers l\'île de Ndar',
+    content: 'Saint-Louis la nuit se pare de lanternes et d\'une atmosphère magique. Traverser le pont Faidherbe éclairé et écouter le jazz s\'échapper des anciennes demeures coloniales est un moment magique !',
+    category: 'retours_experience',
+    imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80',
+    locationSpot: 'Île de Saint-Louis & Pont Faidherbe',
+    likesCount: 27,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-13T21:15:00Z'
+  },
+  {
+    id: 'post_8',
+    communityId: 'comm_saloum',
+    destination: 'Sine Saloum',
+    authorId: 'user_guide_saloum',
+    authorName: 'Bamba Diouf',
+    authorRole: 'professional',
+    title: 'Au cœur du cimetière de coquillages de Joal-Fadiouth',
+    content: 'Savez-vous que Fadiouth est une île entièrement bâtie sur des millénaires de coquillages accumulés ? Son cimetière mixte où chrétiens et musulmans reposent côte à côte sous les baobabs est un exemple universel de tolérance.',
+    category: 'conseils',
+    imageUrl: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80',
+    locationSpot: 'Île aux Coquillages de Fadiouth',
+    likesCount: 51,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-15T11:40:00Z'
+  },
+  {
+    id: 'post_9',
+    communityId: 'comm_kedougou',
+    destination: 'Kédougou',
+    authorId: 'user_guide_kedougou',
+    authorName: 'Samba Diallo',
+    authorRole: 'professional',
+    title: 'Randonnée vers les cascades de Dindéfélo : équipements conseillés',
+    content: 'Pour visiter la grande chute de Dindéfélo (plus de 100m de haut !), prévoyez des chaussures de marche antidérapantes car les rochers près du bassin sont très glissants. L\'eau fraîche de la montagne est parfaite pour se baigner après la marche.',
+    category: 'conseils',
+    imageUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80',
+    locationSpot: 'Cascade de Dindéfélo',
+    likesCount: 33,
+    reported: false,
+    status: 'active',
+    createdAt: '2025-02-18T15:20:00Z'
+  }
+];
+

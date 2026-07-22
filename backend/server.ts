@@ -8,8 +8,8 @@ import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import { INITIAL_DESTINATIONS, INITIAL_ESTABLISHMENTS, INITIAL_OFFERS, INITIAL_REVIEWS } from './data';
-import { User, Establishment, Offer, Booking, Review, ItineraryRequest, SenegalDestination } from '../shared/types';
+import { INITIAL_DESTINATIONS, INITIAL_ESTABLISHMENTS, INITIAL_OFFERS, INITIAL_REVIEWS, INITIAL_COMMUNITIES, INITIAL_COMMUNITY_POSTS } from './data';
+import { User, Establishment, Offer, Booking, Review, Message, ItineraryRequest, SenegalDestination, Community, CommunityPost } from '../shared/types';
 
 const app = express();
 const PORT = 3000;
@@ -44,6 +44,9 @@ interface DatabaseSchema {
   offers: Offer[];
   bookings: Booking[];
   reviews: Review[];
+  messages: Message[];
+  communities: Community[];
+  communityPosts: CommunityPost[];
 }
 
 function loadDatabase(): DatabaseSchema {
@@ -175,6 +178,65 @@ function loadDatabase(): DatabaseSchema {
         }
       });
 
+      // Ensure messages array exists
+      if (!db.messages) {
+        db.messages = [
+          {
+            id: 'msg_1',
+            senderId: 'user_prof_dakar',
+            senderName: 'Cheikh Ndiaye (Hôtel Teranga Dakar)',
+            senderEmail: 'professional@teranga.sn',
+            senderRole: 'professional',
+            recipientId: 'user_tourist_1',
+            recipientName: 'Fatou Diop',
+            recipientEmail: 'tourist@teranga.sn',
+            content: 'Bonjour Fatou ! Bienvenue sur la plateforme Teranga Travel. N’hésitez pas à me poser vos questions sur vos séjours à Dakar.',
+            createdAt: new Date().toISOString(),
+            read: true,
+          },
+          {
+            id: 'msg_2',
+            senderId: 'user_agency_casamance',
+            senderName: 'Lamine Sané (Ecovoyages Casamance)',
+            senderEmail: 'agency_casamance@teranga.sn',
+            senderRole: 'professional',
+            recipientId: 'user_tourist_1',
+            recipientName: 'Fatou Diop',
+            recipientEmail: 'tourist@teranga.sn',
+            content: 'Dalal Ak Jamm Fatou ! Nos pirogues traditionnelles en Casamance sont disponibles pour votre prochain circuit.',
+            createdAt: new Date().toISOString(),
+            read: false,
+          }
+        ];
+        changed = true;
+      }
+
+      // Ensure communities array exists and seed missing items
+      if (!db.communities || db.communities.length === 0) {
+        db.communities = INITIAL_COMMUNITIES;
+        changed = true;
+      } else {
+        INITIAL_COMMUNITIES.forEach(ic => {
+          if (!db.communities.some((c: any) => c.id === ic.id)) {
+            db.communities.push(ic);
+            changed = true;
+          }
+        });
+      }
+
+      // Ensure communityPosts array exists and seed missing items
+      if (!db.communityPosts || db.communityPosts.length === 0) {
+        db.communityPosts = INITIAL_COMMUNITY_POSTS;
+        changed = true;
+      } else {
+        INITIAL_COMMUNITY_POSTS.forEach(ip => {
+          if (!db.communityPosts.some((p: any) => p.id === ip.id)) {
+            db.communityPosts.push(ip);
+            changed = true;
+          }
+        });
+      }
+
       if (changed) {
         saveDatabase(db);
       }
@@ -184,12 +246,44 @@ function loadDatabase(): DatabaseSchema {
     }
   }
 
+  const defaultMessages: Message[] = [
+    {
+      id: 'msg_1',
+      senderId: 'user_prof_dakar',
+      senderName: 'Cheikh Ndiaye (Hôtel Teranga Dakar)',
+      senderEmail: 'professional@teranga.sn',
+      senderRole: 'professional',
+      recipientId: 'user_tourist_1',
+      recipientName: 'Fatou Diop',
+      recipientEmail: 'tourist@teranga.sn',
+      content: 'Bonjour Fatou ! Bienvenue sur la plateforme Teranga Travel. N’hésitez pas à me poser vos questions sur vos séjours à Dakar.',
+      createdAt: new Date().toISOString(),
+      read: true,
+    },
+    {
+      id: 'msg_2',
+      senderId: 'user_agency_casamance',
+      senderName: 'Lamine Sané (Ecovoyages Casamance)',
+      senderEmail: 'agency_casamance@teranga.sn',
+      senderRole: 'professional',
+      recipientId: 'user_tourist_1',
+      recipientName: 'Fatou Diop',
+      recipientEmail: 'tourist@teranga.sn',
+      content: 'Dalal Ak Jamm Fatou ! Nos pirogues traditionnelles en Casamance sont disponibles pour votre prochain circuit.',
+      createdAt: new Date().toISOString(),
+      read: false,
+    }
+  ];
+
   const db: DatabaseSchema = {
     users: defaultUsers,
     establishments: INITIAL_ESTABLISHMENTS,
     offers: INITIAL_OFFERS,
     bookings: [],
     reviews: INITIAL_REVIEWS,
+    messages: defaultMessages,
+    communities: INITIAL_COMMUNITIES,
+    communityPosts: INITIAL_COMMUNITY_POSTS,
   };
 
   saveDatabase(db);
@@ -246,6 +340,291 @@ app.get('/api/auth/users', (req, res) => {
   const db = loadDatabase();
   const safeUsers = db.users.map(({ password, ...u }) => u);
   res.json(safeUsers);
+});
+
+app.put('/api/auth/profile', (req, res) => {
+  const { userId, name, email, phone, preferredRegion, bio, savedOfferIds } = req.body;
+  const db = loadDatabase();
+
+  const userIndex = db.users.findIndex(u => u.id === userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+  }
+
+  const user = db.users[userIndex];
+  if (name !== undefined) user.name = name;
+  if (email !== undefined) user.email = email;
+  if (phone !== undefined) user.phone = phone;
+  if (preferredRegion !== undefined) user.preferredRegion = preferredRegion;
+  if (bio !== undefined) user.bio = bio;
+  if (savedOfferIds !== undefined) user.savedOfferIds = savedOfferIds;
+
+  saveDatabase(db);
+  const { password: _, ...userWithoutPassword } = user;
+  res.json({ user: userWithoutPassword });
+});
+
+// Messaging API (Transversal)
+app.get('/api/messages', (req, res) => {
+  const { userId } = req.query;
+  const db = loadDatabase();
+
+  if (!db.messages) db.messages = [];
+
+  if (!userId) {
+    return res.json(db.messages);
+  }
+
+  // Filter messages involving the user
+  const userMessages = db.messages.filter(
+    m => m.senderId === userId || m.recipientId === userId
+  );
+
+  res.json(userMessages);
+});
+
+app.post('/api/messages', (req, res) => {
+  const { senderId, recipientId, content } = req.body;
+  const db = loadDatabase();
+
+  if (!db.messages) db.messages = [];
+
+  const sender = db.users.find(u => u.id === senderId);
+  const recipient = db.users.find(u => u.id === recipientId);
+
+  if (!sender || !recipient) {
+    return res.status(404).json({ error: 'Expéditeur ou destinataire introuvable.' });
+  }
+
+  const newMessage: Message = {
+    id: `msg_${Date.now()}`,
+    senderId: sender.id,
+    senderName: sender.name,
+    senderEmail: sender.email,
+    senderRole: sender.role,
+    recipientId: recipient.id,
+    recipientName: recipient.name,
+    recipientEmail: recipient.email,
+    content,
+    createdAt: new Date().toISOString(),
+    read: false,
+  };
+
+  db.messages.push(newMessage);
+  saveDatabase(db);
+  res.status(201).json(newMessage);
+});
+
+// ==================== COMMUNITIES API ==================== //
+
+// Get all communities
+app.get('/api/communities', (req, res) => {
+  const db = loadDatabase();
+  const { activeOnly } = req.query;
+  let communities = db.communities || [];
+  if (activeOnly === 'true') {
+    communities = communities.filter(c => c.active);
+  }
+  
+  // Calculate dynamic postsCount for each community
+  const posts = db.communityPosts || [];
+  const enriched = communities.map(comm => {
+    const activePostsCount = posts.filter(p => (p.communityId === comm.id || p.destination.toLowerCase() === comm.name.toLowerCase()) && p.status === 'active').length;
+    return { ...comm, postsCount: activePostsCount };
+  });
+
+  res.json(enriched);
+});
+
+// Admin: Create community
+app.post('/api/communities', (req, res) => {
+  const { name, region, description, coverImage, active } = req.body;
+  const db = loadDatabase();
+  if (!db.communities) db.communities = [];
+
+  const newComm: Community = {
+    id: `comm_${Date.now()}`,
+    name: name || 'Nouvelle Destination',
+    region: region || 'Sénégal',
+    description: description || '',
+    coverImage: coverImage || 'https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=1200&q=80',
+    active: active !== undefined ? active : true,
+    postsCount: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  db.communities.push(newComm);
+  saveDatabase(db);
+  res.status(201).json(newComm);
+});
+
+// Admin: Update community
+app.put('/api/communities/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, region, description, coverImage, active } = req.body;
+  const db = loadDatabase();
+  if (!db.communities) db.communities = [];
+
+  const comm = db.communities.find(c => c.id === id);
+  if (!comm) {
+    return res.status(404).json({ error: 'Communauté introuvable.' });
+  }
+
+  if (name !== undefined) comm.name = name;
+  if (region !== undefined) comm.region = region;
+  if (description !== undefined) comm.description = description;
+  if (coverImage !== undefined) comm.coverImage = coverImage;
+  if (active !== undefined) comm.active = active;
+
+  saveDatabase(db);
+  res.json(comm);
+});
+
+// ==================== COMMUNITY POSTS API ==================== //
+
+// Get community posts with filters
+app.get('/api/community-posts', (req, res) => {
+  const db = loadDatabase();
+  const { communityId, destination, category, search, reportedOnly, status } = req.query;
+  let posts = db.communityPosts || [];
+
+  if (reportedOnly === 'true') {
+    posts = posts.filter(p => p.reported);
+  } else if (status) {
+    posts = posts.filter(p => p.status === status);
+  } else {
+    // Default for tourist app: only active posts
+    posts = posts.filter(p => p.status === 'active');
+  }
+
+  if (communityId && communityId !== 'all') {
+    posts = posts.filter(p => p.communityId === communityId);
+  }
+
+  if (destination && destination !== 'all') {
+    posts = posts.filter(p => p.destination.toLowerCase() === (destination as string).toLowerCase());
+  }
+
+  if (category && category !== 'all') {
+    posts = posts.filter(p => p.category === category);
+  }
+
+  if (search && typeof search === 'string' && search.trim().length > 0) {
+    const q = search.toLowerCase().trim();
+    posts = posts.filter(p => 
+      p.title.toLowerCase().includes(q) ||
+      p.content.toLowerCase().includes(q) ||
+      p.authorName.toLowerCase().includes(q) ||
+      (p.locationSpot && p.locationSpot.toLowerCase().includes(q))
+    );
+  }
+
+  // Sort descending by creation date
+  posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  res.json(posts);
+});
+
+// Create community post
+app.post('/api/community-posts', (req, res) => {
+  const { communityId, destination, authorId, authorName, authorRole, title, content, category, imageUrl, locationSpot } = req.body;
+  const db = loadDatabase();
+  if (!db.communityPosts) db.communityPosts = [];
+
+  const newPost: CommunityPost = {
+    id: `post_${Date.now()}`,
+    communityId: communityId || 'comm_dakar',
+    destination: destination || 'Dakar',
+    authorId: authorId || 'guest',
+    authorName: authorName || 'Voyageur Anonyme',
+    authorRole: authorRole || 'tourist',
+    title,
+    content,
+    category: category || 'retours_experience',
+    imageUrl: imageUrl || undefined,
+    locationSpot: locationSpot || undefined,
+    likesCount: 0,
+    reported: false,
+    status: 'active',
+    createdAt: new Date().toISOString()
+  };
+
+  db.communityPosts.unshift(newPost);
+  saveDatabase(db);
+  res.status(201).json(newPost);
+});
+
+// Like / Toggle Like a post
+app.post('/api/community-posts/:id/like', (req, res) => {
+  const { id } = req.params;
+  const db = loadDatabase();
+  if (!db.communityPosts) db.communityPosts = [];
+
+  const post = db.communityPosts.find(p => p.id === id);
+  if (!post) {
+    return res.status(404).json({ error: 'Publication introuvable.' });
+  }
+
+  post.likesCount = (post.likesCount || 0) + 1;
+  saveDatabase(db);
+  res.json(post);
+});
+
+// Report a post
+app.post('/api/community-posts/:id/report', (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+  const db = loadDatabase();
+  if (!db.communityPosts) db.communityPosts = [];
+
+  const post = db.communityPosts.find(p => p.id === id);
+  if (!post) {
+    return res.status(404).json({ error: 'Publication introuvable.' });
+  }
+
+  post.reported = true;
+  post.reportReason = reason || 'Signalement utilisateur';
+  saveDatabase(db);
+  res.json({ message: 'Signalement transmis aux administrateurs.', post });
+});
+
+// Admin: Update post status or clear report
+app.put('/api/community-posts/:id/status', (req, res) => {
+  const { id } = req.params;
+  const { status, clearReport } = req.body;
+  const db = loadDatabase();
+  if (!db.communityPosts) db.communityPosts = [];
+
+  const post = db.communityPosts.find(p => p.id === id);
+  if (!post) {
+    return res.status(404).json({ error: 'Publication introuvable.' });
+  }
+
+  if (status) post.status = status;
+  if (clearReport) {
+    post.reported = false;
+    post.reportReason = undefined;
+  }
+
+  saveDatabase(db);
+  res.json(post);
+});
+
+// Admin: Delete post
+app.delete('/api/community-posts/:id', (req, res) => {
+  const { id } = req.params;
+  const db = loadDatabase();
+  if (!db.communityPosts) db.communityPosts = [];
+
+  const initialLength = db.communityPosts.length;
+  db.communityPosts = db.communityPosts.filter(p => p.id !== id);
+
+  if (db.communityPosts.length === initialLength) {
+    return res.status(404).json({ error: 'Publication introuvable.' });
+  }
+
+  saveDatabase(db);
+  res.json({ message: 'Publication supprimée définitivement.' });
 });
 
 // 2. Destinations API
@@ -469,6 +848,24 @@ app.put('/api/offers/:id', (req, res) => {
     offer.status = 'pending';
     offer.rejectionReason = '';
   }
+
+  saveDatabase(db);
+  res.json(offer);
+});
+
+app.put('/api/offers/:id/calendar', (req, res) => {
+  const { id } = req.params;
+  const { availabilityCalendar, availableQuantity } = req.body;
+  const db = loadDatabase();
+
+  const offerIndex = db.offers.findIndex(o => o.id === id);
+  if (offerIndex === -1) {
+    return res.status(404).json({ error: 'Offre non trouvée.' });
+  }
+
+  const offer = db.offers[offerIndex];
+  if (availabilityCalendar !== undefined) offer.availabilityCalendar = availabilityCalendar;
+  if (availableQuantity !== undefined) offer.availableQuantity = Number(availableQuantity);
 
   saveDatabase(db);
   res.json(offer);
