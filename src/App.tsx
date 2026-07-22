@@ -9,16 +9,16 @@ import {
   Sparkles, Check, X, Shield, ChevronRight, Plus, ArrowLeft, Sun, Waves, Eye, 
   RefreshCw, ClipboardList, Building, CheckCircle, HelpCircle, ShieldAlert, Heart, Info 
 } from 'lucide-react';
-import { SenegalDestination, Destination, Establishment, Offer, Booking, Review, User as UserType } from './types';
-import { INITIAL_DESTINATIONS } from './data';
-import MapMock from './components/MapMock';
-import AIPlanner from './components/AIPlanner';
-import ReviewSection from './components/ReviewSection';
-import BookingModal from './components/BookingModal';
+import { SenegalDestination, Destination, Establishment, Offer, Booking, Review, User as UserType } from '../shared/types';
+import { INITIAL_DESTINATIONS } from '../backend/data';
+import MapMock from '../shared/ui/MapMock';
+import AIPlanner from '../shared/ui/AIPlanner';
+import ReviewSection from '../shared/ui/ReviewSection';
+import BookingModal from '../shared/ui/BookingModal';
 import HostApp from '../frontend/web-host/HostApp';
 import CircuitsApp from '../frontend/web-circuits/CircuitsApp';
 import AdminApp from '../frontend/web-admin/AdminApp';
-import { TerangaLogo } from './components/TerangaLogo';
+import { TerangaLogo } from '../shared/ui/TerangaLogo';
 
 export default function App() {
   // Navigation & Routing State
