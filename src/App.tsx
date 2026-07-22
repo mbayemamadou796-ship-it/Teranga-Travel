@@ -15,9 +15,9 @@ import MapMock from './components/MapMock';
 import AIPlanner from './components/AIPlanner';
 import ReviewSection from './components/ReviewSection';
 import BookingModal from './components/BookingModal';
-import AppHebergeurs from './components/AppHebergeurs';
-import AppCircuitsGuides from './components/AppCircuitsGuides';
-import AppAdmin from './components/AppAdmin';
+import HostApp from '../frontend/web-host/HostApp';
+import CircuitsApp from '../frontend/web-circuits/CircuitsApp';
+import AdminApp from '../frontend/web-admin/AdminApp';
 import { TerangaLogo } from './components/TerangaLogo';
 
 export default function App() {
@@ -550,7 +550,7 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         
         {activeApp === 'hebergeurs' && (
-          <AppHebergeurs 
+          <HostApp 
             currentUser={currentUser} 
             establishments={establishments} 
             onRefreshData={fetchEstablishments} 
@@ -559,7 +559,7 @@ export default function App() {
         )}
 
         {activeApp === 'circuits_guides' && (
-          <AppCircuitsGuides 
+          <CircuitsApp 
             currentUser={currentUser} 
             establishments={establishments} 
             onRefreshData={fetchEstablishments} 
@@ -568,7 +568,7 @@ export default function App() {
         )}
 
         {activeApp === 'admin' && (
-          <AppAdmin 
+          <AdminApp 
             currentUser={currentUser} 
             establishments={establishments} 
             onRefreshData={fetchEstablishments} 
