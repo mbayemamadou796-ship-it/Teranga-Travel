@@ -15,9 +15,9 @@ import MapMock from '../shared/ui/MapMock';
 import AIPlanner from '../shared/ui/AIPlanner';
 import ReviewSection from '../shared/ui/ReviewSection';
 import BookingModal from '../shared/ui/BookingModal';
-import HostApp from '../frontend/web-host/HostApp';
-import CircuitsApp from '../frontend/web-circuits/CircuitsApp';
-import AdminApp from '../frontend/web-admin/AdminApp';
+import HostApp from './web-host/HostApp';
+import CircuitsApp from './web-circuits/CircuitsApp';
+import AdminApp from './web-admin/AdminApp';
 import { TerangaLogo } from '../shared/ui/TerangaLogo';
 
 export default function App() {
