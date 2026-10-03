@@ -9,7 +9,10 @@ import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import { INITIAL_DESTINATIONS, INITIAL_ESTABLISHMENTS, INITIAL_OFFERS, INITIAL_REVIEWS, INITIAL_COMMUNITIES, INITIAL_COMMUNITY_POSTS } from './data';
-import { User, Establishment, Offer, Booking, Review, Message, ItineraryRequest, SenegalDestination, Community, CommunityPost } from '../shared/types';
+import { 
+  User, Establishment, Offer, Booking, Review, Message, ItineraryRequest, SenegalDestination, 
+  Community, CommunityPost, TravelBooking, BookingItem, Notification, AuditLog 
+} from '../shared/types';
 
 const app = express();
 const PORT = 3000;
@@ -43,6 +46,9 @@ interface DatabaseSchema {
   establishments: Establishment[];
   offers: Offer[];
   bookings: Booking[];
+  travelBookings: TravelBooking[];
+  notifications: Notification[];
+  auditLogs: AuditLog[];
   reviews: Review[];
   messages: Message[];
   communities: Community[];
@@ -237,6 +243,208 @@ function loadDatabase(): DatabaseSchema {
         });
       }
 
+      // Ensure travelBookings array exists and seed reference cases
+      if (!db.travelBookings || db.travelBookings.length === 0) {
+        db.travelBookings = [
+          {
+            id: 'tb_ref_completed',
+            reference: 'TT-2026-8F4K2',
+            userId: 'user_tourist_1',
+            travelerName: 'Fatou Diop',
+            travelerEmail: 'tourist@teranga.sn',
+            travelerPhone: '+221 77 123 45 67',
+            destination: 'Casamance',
+            checkIn: '2026-12-15',
+            checkOut: '2026-12-20',
+            guestsCount: 2,
+            message: 'Nous souhaitions découvrir les villages Diolas et la forêt sacrée.',
+            totalPrice: 240000,
+            status: 'COMPLETED',
+            createdAt: '2026-12-01',
+            items: [
+              {
+                id: 'item_ref_acc',
+                bookingId: 'tb_ref_completed',
+                type: 'ACCOMMODATION',
+                providerId: 'est_1',
+                providerName: 'Hôtel Teranga & Spa Almadies',
+                providerOwnerId: 'user_prof_dakar',
+                offerId: 'off_1',
+                offerTitle: 'Suite Junior Vue Océan & Balcon Private',
+                price: 150000,
+                details: {
+                  roomType: 'Suite Junior Océan',
+                  nightsCount: 5,
+                },
+                status: 'COMPLETED',
+                checkInDate: '2026-12-15',
+                completedAt: '2026-12-20',
+                reviewSubmitted: true,
+              },
+              {
+                id: 'item_ref_guide',
+                bookingId: 'tb_ref_completed',
+                type: 'GUIDE',
+                providerId: 'est_guide_2',
+                providerName: 'Awa Sané - Guide Écotourisme & Nature Casamance',
+                providerOwnerId: 'user_guide_awa',
+                offerId: 'off_guide2_1',
+                offerTitle: 'Journée Immersion Botanique & Culturelle en Casamance',
+                price: 90000,
+                details: {
+                  guideName: 'Awa Sané',
+                  durationDays: 5,
+                  languages: ['Français', 'Wolof', 'Diola'],
+                  specialty: 'Culture & Nature',
+                },
+                status: 'COMPLETED',
+                checkInDate: '2026-12-15',
+                completedAt: '2026-12-20',
+                reviewSubmitted: true,
+              }
+            ]
+          },
+          {
+            id: 'tb_ref_pending',
+            reference: 'TT-2026-3N8V7',
+            userId: 'user_tourist_1',
+            travelerName: 'Fatou Diop',
+            travelerEmail: 'tourist@teranga.sn',
+            travelerPhone: '+221 77 123 45 67',
+            destination: 'Sine Saloum',
+            checkIn: '2027-01-10',
+            checkOut: '2027-01-14',
+            guestsCount: 2,
+            message: 'Observation des oiseaux et balade en pirogue dans les bolongs.',
+            totalPrice: 175000,
+            status: 'PENDING',
+            createdAt: '2026-12-28',
+            items: [
+              {
+                id: 'item_pending_acc',
+                bookingId: 'tb_ref_pending',
+                type: 'ACCOMMODATION',
+                providerId: 'est_2',
+                providerName: 'Ecolodge du Saloum',
+                providerOwnerId: 'user_prof_saloum',
+                offerId: 'off_2',
+                offerTitle: 'Bungalow Traditionnel sur Pilotis',
+                price: 100000,
+                details: {
+                  roomType: 'Bungalow Traditionnel Bolong',
+                  nightsCount: 4,
+                },
+                status: 'PENDING',
+              },
+              {
+                id: 'item_pending_guide',
+                bookingId: 'tb_ref_pending',
+                type: 'GUIDE',
+                providerId: 'est_agence_2',
+                providerName: 'Saloum Eco-Aventures & Pirogues',
+                providerOwnerId: 'user_agency_saloum',
+                offerId: 'off_ag2_1',
+                offerTitle: 'Excursion Pirogue Bolongs & Île aux Coquillages de Fadiouth',
+                price: 75000,
+                details: {
+                  guideName: 'Safiétou Diallo',
+                  durationDays: 3,
+                  languages: ['Français', 'Wolof', 'Sérère'],
+                  specialty: 'Ornithologie & Pirogue',
+                },
+                status: 'PENDING',
+              }
+            ]
+          }
+        ];
+        changed = true;
+      }
+
+      if (!db.notifications || db.notifications.length === 0) {
+        db.notifications = [
+          {
+            id: 'notif_init_1',
+            recipientUserId: 'user_prof_saloum',
+            title: 'Nouvelle demande d\'hébergement',
+            message: 'Fatou Diop a envoyé une demande pour Bungalow Traditionnel du 10/01/2027 au 14/01/2027. Réf: TT-2026-3N8V7',
+            type: 'booking_request',
+            reference: 'TT-2026-3N8V7',
+            read: false,
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 'notif_init_2',
+            recipientUserId: 'user_agency_saloum',
+            title: 'Nouvelle demande de guidage',
+            message: 'Fatou Diop a sélectionné votre excursion en pirogue du 10/01/2027 au 14/01/2027. Réf: TT-2026-3N8V7',
+            type: 'booking_request',
+            reference: 'TT-2026-3N8V7',
+            read: false,
+            createdAt: new Date().toISOString()
+          }
+        ];
+        changed = true;
+      }
+
+      if (!db.auditLogs || db.auditLogs.length === 0) {
+        db.auditLogs = [
+          {
+            id: 'log_init_1',
+            actorUserId: 'user_tourist_1',
+            actorName: 'Fatou Diop',
+            action: 'TOURIST_CREATED_BOOKING',
+            entityType: 'TravelBooking',
+            entityId: 'tb_ref_pending',
+            summary: 'Création du dossier de voyage combiné TT-2026-3N8V7 (Ecolodge du Saloum + Saloum Eco-Aventures)',
+            createdAt: new Date().toISOString()
+          }
+        ];
+        changed = true;
+      }
+
+      // Seed verified reviews if not present
+      if (!db.reviews.some(r => r.verified)) {
+        db.reviews.push({
+          id: 'rev_verified_1',
+          establishmentId: 'est_1',
+          bookingId: 'tb_ref_completed',
+          bookingItemId: 'item_ref_acc',
+          authorUserId: 'user_tourist_1',
+          authorName: 'Fatou Diop',
+          touristName: 'Fatou Diop',
+          targetType: 'ACCOMMODATION',
+          targetId: 'est_1',
+          targetName: 'Hôtel Teranga & Spa Almadies',
+          rating: 5,
+          title: 'Accueil chaleureux et séjour inoubliable',
+          comment: 'Très bon séjour, accueil chaleureux et personnel aux petits soins. La vue sur le coucher de soleil est magique !',
+          verified: true,
+          stayDate: 'Séjour effectué en décembre 2026',
+          status: 'VISIBLE',
+          createdAt: '2026-12-21'
+        });
+        db.reviews.push({
+          id: 'rev_verified_2',
+          establishmentId: 'est_guide_2',
+          bookingId: 'tb_ref_completed',
+          bookingItemId: 'item_ref_guide',
+          authorUserId: 'user_tourist_1',
+          authorName: 'Fatou Diop',
+          touristName: 'Fatou Diop',
+          targetType: 'GUIDE',
+          targetId: 'est_guide_2',
+          targetName: 'Awa Sané - Guide Écotourisme & Nature Casamance',
+          rating: 5,
+          title: 'Guide très disponible et passionnée',
+          comment: 'Awa a été formidable du début à la fin. Elle nous a fait découvrir des villages Diolas authentiques avec un respect et une bienveillance remarquables.',
+          verified: true,
+          stayDate: 'Séjour effectué en décembre 2026',
+          status: 'VISIBLE',
+          createdAt: '2026-12-21'
+        });
+        changed = true;
+      }
+
       if (changed) {
         saveDatabase(db);
       }
@@ -280,6 +488,9 @@ function loadDatabase(): DatabaseSchema {
     establishments: INITIAL_ESTABLISHMENTS,
     offers: INITIAL_OFFERS,
     bookings: [],
+    travelBookings: [],
+    notifications: [],
+    auditLogs: [],
     reviews: INITIAL_REVIEWS,
     messages: defaultMessages,
     communities: INITIAL_COMMUNITIES,
@@ -1127,43 +1338,738 @@ app.put('/api/bookings/:id/status', (req, res) => {
 
 // 6. Reviews API
 app.get('/api/reviews', (req, res) => {
-  const { establishmentId } = req.query;
+  const { establishmentId, targetId, verifiedOnly } = req.query;
   const db = loadDatabase();
+  let reviews = db.reviews || [];
 
-  if (establishmentId) {
-    const filtered = db.reviews.filter(r => r.establishmentId === establishmentId);
-    return res.json(filtered);
+  if (establishmentId || targetId) {
+    const filterId = establishmentId || targetId;
+    reviews = reviews.filter(r => r.establishmentId === filterId || r.targetId === filterId);
   }
 
-  res.json(db.reviews);
+  if (verifiedOnly === 'true') {
+    reviews = reviews.filter(r => r.verified);
+  }
+
+  res.json(reviews);
 });
 
 app.post('/api/reviews', (req, res) => {
-  const { establishmentId, authorName, rating, comment } = req.body;
+  const { establishmentId, authorName, rating, comment, title, targetType, targetId, verified, stayDate, bookingId, bookingItemId } = req.body;
   const db = loadDatabase();
 
   const newReview: Review = {
     id: `rev_${Date.now()}`,
-    establishmentId,
+    establishmentId: establishmentId || targetId,
+    targetId: targetId || establishmentId,
+    targetType: targetType || 'ACCOMMODATION',
     authorName,
+    touristName: authorName,
     rating: Number(rating),
+    title: title || 'Avis sur le séjour',
     comment,
+    verified: Boolean(verified),
+    stayDate: stayDate || 'Séjour récent',
+    bookingId,
+    bookingItemId,
+    status: 'VISIBLE',
     createdAt: new Date().toISOString().split('T')[0],
   };
 
   db.reviews.push(newReview);
 
-  const estReviews = db.reviews.filter(r => r.establishmentId === establishmentId);
-  const totalRating = estReviews.reduce((sum, r) => sum + r.rating, 0);
-  const averageRating = Number((totalRating / estReviews.length).toFixed(1));
+  const target = targetId || establishmentId;
+  const estReviews = db.reviews.filter(r => r.establishmentId === target || r.targetId === target);
+  if (estReviews.length > 0) {
+    const totalRating = estReviews.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = Number((totalRating / estReviews.length).toFixed(1));
 
-  const estIndex = db.establishments.findIndex(e => e.id === establishmentId);
-  if (estIndex !== -1) {
-    db.establishments[estIndex].rating = averageRating;
+    const estIndex = db.establishments.findIndex(e => e.id === target);
+    if (estIndex !== -1) {
+      db.establishments[estIndex].rating = averageRating;
+      db.establishments[estIndex].reviewsCount = estReviews.length;
+    }
   }
 
   saveDatabase(db);
   res.status(201).json(newReview);
+});
+
+// ==================== PARCOURS CRITIQUE : DOSSIERS DE VOYAGE COMBINÉS (TRAVEL BOOKINGS) ==================== //
+
+// 6.1. Get travel bookings
+app.get('/api/travel-bookings', (req, res) => {
+  const { userId, role, establishmentId } = req.query;
+  const db = loadDatabase();
+  const bookings = db.travelBookings || [];
+
+  if (role === 'admin') {
+    return res.json(bookings);
+  }
+
+  if (role === 'tourist' && userId) {
+    const touristBookings = bookings.filter(b => b.userId === userId);
+    return res.json(touristBookings);
+  }
+
+  if (role === 'professional' && userId) {
+    const proBookings = bookings.filter(b => 
+      b.items.some(item => item.providerOwnerId === userId || (establishmentId && item.providerId === establishmentId))
+    );
+    return res.json(proBookings);
+  }
+
+  res.json(bookings);
+});
+
+// 6.2. Get single travel booking by ID or reference
+app.get('/api/travel-bookings/:id', (req, res) => {
+  const { id } = req.params;
+  const db = loadDatabase();
+  const booking = (db.travelBookings || []).find(b => b.id === id || b.reference === id);
+
+  if (!booking) {
+    return res.status(404).json({ error: 'Dossier de voyage introuvable.' });
+  }
+
+  res.json(booking);
+});
+
+// 6.2.1. Check review eligibility for a booking (GET /api/bookings/:id/review-eligibility)
+app.get('/api/travel-bookings/:id/review-eligibility', (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.query;
+  const db = loadDatabase();
+  const booking = (db.travelBookings || []).find(b => b.id === id || b.reference === id);
+
+  if (!booking) {
+    return res.status(404).json({ error: 'Dossier introuvable.' });
+  }
+
+  const isAuthor = !userId || booking.userId === userId;
+  const isCompleted = booking.status === 'COMPLETED';
+  const eligibleItems = booking.items.filter(item => item.status === 'COMPLETED' && !item.reviewSubmitted);
+
+  res.json({
+    eligible: isAuthor && (isCompleted || eligibleItems.length > 0),
+    bookingStatus: booking.status,
+    eligibleItems,
+    completedItemsCount: booking.items.filter(i => i.status === 'COMPLETED').length,
+    totalItemsCount: booking.items.length
+  });
+});
+
+// 6.2.2. Availability check API (POST /api/availability/check) as required by Section 11 & 29
+app.post('/api/availability/check', (req, res) => {
+  const { 
+    accommodationOfferId, accommodationEstablishmentId, 
+    guideOfferId, guideEstablishmentId, 
+    checkIn, checkOut, guestsCount 
+  } = req.body;
+
+  if (!checkIn || !checkOut) {
+    return res.status(400).json({ 
+      available: false, 
+      error: 'Veuillez renseigner les dates d\'arrivée et de départ.' 
+    });
+  }
+
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+    return res.status(400).json({ 
+      available: false, 
+      error: 'La date de départ doit être postérieure à la date d\'arrivée.' 
+    });
+  }
+
+  const db = loadDatabase();
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  const days = nights;
+
+  let accAvailable = true;
+  let accDetails: any = null;
+  if (accommodationOfferId) {
+    const accOffer = db.offers.find(o => o.id === accommodationOfferId);
+    const accEst = db.establishments.find(e => e.id === (accommodationEstablishmentId || accOffer?.establishmentId));
+    if (!accOffer || !accEst || accEst.status !== 'approved') {
+      accAvailable = false;
+      accDetails = { available: false, error: 'Hébergement non validé ou introuvable.' };
+    } else {
+      if (guestsCount && Number(guestsCount) > accOffer.capacity) {
+        accAvailable = false;
+        accDetails = { available: false, error: `Capacité dépassée (max: ${accOffer.capacity} pers.)` };
+      } else {
+        accDetails = { 
+          available: true, 
+          offerTitle: accOffer.title, 
+          establishmentName: accEst.name, 
+          pricePerNight: accOffer.price, 
+          nights, 
+          total: accOffer.price * nights 
+        };
+      }
+    }
+  }
+
+  let guideAvailable = true;
+  let guideDetails: any = null;
+  if (guideOfferId) {
+    const guideOffer = db.offers.find(o => o.id === guideOfferId);
+    const guideEst = db.establishments.find(e => e.id === (guideEstablishmentId || guideOffer?.establishmentId));
+    if (!guideOffer || !guideEst || guideEst.status !== 'approved') {
+      guideAvailable = false;
+      guideDetails = { available: false, error: 'Guide non validé ou introuvable.' };
+    } else {
+      guideDetails = { 
+        available: true, 
+        offerTitle: guideOffer.title, 
+        guideName: guideEst.name, 
+        pricePerDay: guideOffer.price, 
+        days, 
+        total: guideOffer.price * days 
+      };
+    }
+  }
+
+  const allAvailable = accAvailable && guideAvailable;
+  const totalPrice = (accDetails?.total || 0) + (guideDetails?.total || 0);
+
+  res.json({
+    available: allAvailable,
+    accommodation: accDetails,
+    guide: guideDetails,
+    nights,
+    days,
+    totalPrice,
+    message: allAvailable 
+      ? 'Les disponibilités ont été vérifiées et validées avec succès par le serveur !'
+      : 'Certaines prestations sont indisponibles pour les critères sélectionnés.'
+  });
+});
+
+// 6.2.3. Get accommodation availability calendar
+app.get('/api/accommodations/:id/availability', (req, res) => {
+  const { id } = req.params;
+  const db = loadDatabase();
+  const est = db.establishments.find(e => e.id === id);
+  if (!est) return res.status(404).json({ error: 'Hébergement introuvable.' });
+
+  const offers = db.offers.filter(o => o.establishmentId === id);
+  res.json({
+    establishmentId: id,
+    name: est.name,
+    status: est.status,
+    available: est.status === 'approved',
+    offersCount: offers.length
+  });
+});
+
+// 6.2.4. Get guide availability
+app.get('/api/guides/:id/availability', (req, res) => {
+  const { id } = req.params;
+  const db = loadDatabase();
+  const guide = db.establishments.find(e => e.id === id);
+  if (!guide) return res.status(404).json({ error: 'Guide introuvable.' });
+
+  res.json({
+    guideId: id,
+    name: guide.name,
+    status: guide.status,
+    available: guide.status === 'approved',
+    specialties: guide.amenities
+  });
+});
+
+// 6.3. Create combined travel booking (POST /api/travel-bookings)
+app.post('/api/travel-bookings', (req, res) => {
+  const { 
+    userId, destination, checkIn, checkOut, guestsCount, message,
+    accommodationOfferId, accommodationEstablishmentId,
+    guideOfferId, guideEstablishmentId,
+    travelerName, travelerEmail, travelerPhone
+  } = req.body;
+
+  const db = loadDatabase();
+  if (!db.travelBookings) db.travelBookings = [];
+  if (!db.notifications) db.notifications = [];
+  if (!db.auditLogs) db.auditLogs = [];
+
+  const user = db.users.find(u => u.id === userId);
+
+  // Calculate nights and days
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const nights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  const days = nights;
+
+  const bookingId = `tb_${Date.now()}`;
+  const randomRef = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const reference = `TT-2026-${randomRef}`;
+  const items: BookingItem[] = [];
+  let totalPrice = 0;
+
+  // Prestation 1: Accommodation (if selected)
+  let accEst: any = null;
+  let accOffer: any = null;
+  if (accommodationOfferId) {
+    accOffer = db.offers.find(o => o.id === accommodationOfferId);
+    accEst = db.establishments.find(e => e.id === (accommodationEstablishmentId || accOffer?.establishmentId));
+    if (!accOffer || !accEst) {
+      return res.status(400).json({ error: 'Hébergement sélectionné introuvable.' });
+    }
+    if (accEst.status !== 'approved') {
+      return res.status(400).json({ error: 'L\'hébergement sélectionné n\'est pas encore validé par l\'administration.' });
+    }
+    const accPrice = accOffer.price * nights;
+    totalPrice += accPrice;
+
+    items.push({
+      id: `item_acc_${Date.now()}`,
+      bookingId,
+      type: 'ACCOMMODATION',
+      providerId: accEst.id,
+      providerName: accEst.name,
+      providerOwnerId: accEst.ownerId,
+      offerId: accOffer.id,
+      offerTitle: accOffer.title,
+      price: accPrice,
+      details: {
+        roomType: accOffer.title,
+        nightsCount: nights,
+      },
+      status: 'PENDING'
+    });
+  }
+
+  // Prestation 2: Guide (if selected)
+  let guideEst: any = null;
+  let guideOffer: any = null;
+  if (guideOfferId) {
+    guideOffer = db.offers.find(o => o.id === guideOfferId);
+    guideEst = db.establishments.find(e => e.id === (guideEstablishmentId || guideOffer?.establishmentId));
+    if (!guideOffer || !guideEst) {
+      return res.status(400).json({ error: 'Guide sélectionné introuvable.' });
+    }
+    if (guideEst.status !== 'approved') {
+      return res.status(400).json({ error: 'Le guide sélectionné n\'est pas encore validé par l\'administration.' });
+    }
+    const guidePrice = guideOffer.price * days;
+    totalPrice += guidePrice;
+
+    items.push({
+      id: `item_guide_${Date.now() + 1}`,
+      bookingId,
+      type: 'GUIDE',
+      providerId: guideEst.id,
+      providerName: guideEst.name,
+      providerOwnerId: guideEst.ownerId,
+      offerId: guideOffer.id,
+      offerTitle: guideOffer.title,
+      price: guidePrice,
+      details: {
+        guideName: guideEst.name,
+        durationDays: days,
+        languages: ['Français', 'Wolof'],
+      },
+      status: 'PENDING'
+    });
+  }
+
+  if (items.length === 0) {
+    return res.status(400).json({ error: 'Veuillez sélectionner au moins un hébergement ou un guide pour composer votre dossier.' });
+  }
+
+  const newBooking: TravelBooking = {
+    id: bookingId,
+    reference,
+    userId: user ? user.id : (userId || `tourist_${Date.now()}`),
+    travelerName: user ? user.name : (travelerName || 'Voyageur Teranga'),
+    travelerEmail: user ? user.email : (travelerEmail || 'voyageur@teranga.sn'),
+    travelerPhone: travelerPhone || user?.phone || '+221 77 000 00 00',
+    destination: destination || (accEst?.location || guideEst?.location || 'Casamance'),
+    checkIn,
+    checkOut,
+    guestsCount: Number(guestsCount) || 2,
+    message: message || '',
+    totalPrice,
+    status: 'PENDING',
+    items,
+    createdAt: new Date().toISOString().split('T')[0]
+  };
+
+  db.travelBookings.push(newBooking);
+
+  // Send notifications to providers
+  if (accEst) {
+    db.notifications.push({
+      id: `notif_${Date.now()}_1`,
+      recipientUserId: accEst.ownerId,
+      title: 'Nouvelle demande d\'hébergement',
+      message: `${newBooking.travelerName} a envoyé une demande pour ${accOffer.title} du ${checkIn} au ${checkOut} (${nights} nuits). Réf: ${reference}`,
+      type: 'booking_request',
+      reference,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  if (guideEst) {
+    db.notifications.push({
+      id: `notif_${Date.now()}_2`,
+      recipientUserId: guideEst.ownerId,
+      title: 'Nouvelle demande de guidage',
+      message: `${newBooking.travelerName} a sélectionné vos services pour ${days} jours du ${checkIn} au ${checkOut}. Réf: ${reference}`,
+      type: 'booking_request',
+      reference,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  // Notification to traveler
+  db.notifications.push({
+    id: `notif_${Date.now()}_3`,
+    recipientUserId: newBooking.userId,
+    title: 'Dossier de voyage créé avec succès !',
+    message: `Votre demande combinée (${items.map(i => i.providerName).join(' + ')}) a été transmise aux professionnels. Référence : ${reference}`,
+    type: 'info',
+    reference,
+    read: false,
+    createdAt: new Date().toISOString()
+  });
+
+  db.auditLogs.push({
+    id: `log_${Date.now()}`,
+    actorUserId: newBooking.userId,
+    actorName: newBooking.travelerName,
+    action: 'TOURIST_CREATED_BOOKING',
+    entityType: 'TravelBooking',
+    entityId: newBooking.id,
+    summary: `Création du dossier de voyage combiné ${reference} (${items.map(i => i.providerName).join(' + ')})`,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDatabase(db);
+  res.status(201).json(newBooking);
+});
+
+// 6.3.1. Cancel travel booking (POST /api/travel-bookings/:id/cancel)
+app.post('/api/travel-bookings/:id/cancel', (req, res) => {
+  const { id } = req.params;
+  const { userId, role, reason } = req.body;
+  const db = loadDatabase();
+
+  const booking = (db.travelBookings || []).find(b => b.id === id || b.reference === id);
+  if (!booking) return res.status(404).json({ error: 'Dossier introuvable.' });
+
+  booking.status = 'CANCELLED';
+  booking.cancelledBy = userId || role || 'traveler';
+  booking.cancellationReason = reason || 'Annulation demandée par l\'utilisateur';
+
+  booking.items.forEach(item => {
+    if (item.status !== 'COMPLETED') {
+      item.status = 'CANCELLED';
+    }
+  });
+
+  db.auditLogs.push({
+    id: `log_${Date.now()}`,
+    actorUserId: userId || 'unknown',
+    actorName: role || 'Utilisateur',
+    action: 'BOOKING_CANCELLED',
+    entityType: 'TravelBooking',
+    entityId: booking.id,
+    summary: `Annulation du dossier de voyage ${booking.reference} (${booking.cancellationReason})`,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDatabase(db);
+  res.json(booking);
+});
+
+// 6.4. Accept booking item
+app.post('/api/travel-bookings/:id/item/:itemId/accept', (req, res) => {
+  const { id, itemId } = req.params;
+  const { userId } = req.body;
+  const db = loadDatabase();
+
+  const booking = (db.travelBookings || []).find(b => b.id === id);
+  if (!booking) return res.status(404).json({ error: 'Dossier introuvable.' });
+
+  const item = booking.items.find(i => i.id === itemId);
+  if (!item) return res.status(404).json({ error: 'Prestation introuvable.' });
+
+  item.status = 'CONFIRMED';
+
+  const allConfirmed = booking.items.every(i => i.status === 'CONFIRMED');
+  if (allConfirmed) {
+    booking.status = 'CONFIRMED';
+    db.notifications.push({
+      id: `notif_${Date.now()}`,
+      recipientUserId: booking.userId,
+      title: 'Séjour entièrement confirmé ! 🎉',
+      message: `Votre hébergement et votre guide ont validé votre voyage à ${booking.destination}. Référence: ${booking.reference}`,
+      type: 'booking_confirmed',
+      reference: booking.reference,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  } else {
+    booking.status = 'PARTIALLY_CONFIRMED';
+    db.notifications.push({
+      id: `notif_${Date.now()}`,
+      recipientUserId: booking.userId,
+      title: 'Prestation confirmée',
+      message: `${item.providerName} a validé votre demande. En attente de la seconde confirmation. Réf: ${booking.reference}`,
+      type: 'booking_accepted',
+      reference: booking.reference,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  db.auditLogs.push({
+    id: `log_${Date.now()}`,
+    actorUserId: userId || item.providerOwnerId,
+    actorName: item.providerName,
+    action: item.type === 'ACCOMMODATION' ? 'HOST_ACCEPTED_BOOKING' : 'GUIDE_ACCEPTED_BOOKING',
+    entityType: 'BookingItem',
+    entityId: item.id,
+    summary: `${item.providerName} a accepté la prestation ${item.type} pour le dossier ${booking.reference}`,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDatabase(db);
+  res.json(booking);
+});
+
+// 6.5. Reject booking item
+app.post('/api/travel-bookings/:id/item/:itemId/reject', (req, res) => {
+  const { id, itemId } = req.params;
+  const { userId, reason } = req.body;
+  const db = loadDatabase();
+
+  const booking = (db.travelBookings || []).find(b => b.id === id);
+  if (!booking) return res.status(404).json({ error: 'Dossier introuvable.' });
+
+  const item = booking.items.find(i => i.id === itemId);
+  if (!item) return res.status(404).json({ error: 'Prestation introuvable.' });
+
+  item.status = 'REJECTED';
+  item.rejectionReason = reason || 'Indisponibilité sur les dates choisies';
+
+  booking.status = 'REJECTED';
+
+  db.notifications.push({
+    id: `notif_${Date.now()}`,
+    recipientUserId: booking.userId,
+    title: 'Prestation non disponible',
+    message: `${item.providerName} ne peut pas assurer la prestation aux dates choisies. Vous pouvez choisir un autre prestataire pour votre dossier ${booking.reference}.`,
+    type: 'booking_rejected',
+    reference: booking.reference,
+    read: false,
+    createdAt: new Date().toISOString()
+  });
+
+  db.auditLogs.push({
+    id: `log_${Date.now()}`,
+    actorUserId: userId || item.providerOwnerId,
+    actorName: item.providerName,
+    action: item.type === 'ACCOMMODATION' ? 'HOST_REJECTED_BOOKING' : 'GUIDE_REJECTED_BOOKING',
+    entityType: 'BookingItem',
+    entityId: item.id,
+    summary: `${item.providerName} a refusé la prestation ${item.type} pour le dossier ${booking.reference} (${item.rejectionReason})`,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDatabase(db);
+  res.json(booking);
+});
+
+// 6.6. Check-in / Start prestation (IN_PROGRESS)
+app.post('/api/travel-bookings/:id/item/:itemId/check-in', (req, res) => {
+  const { id, itemId } = req.params;
+  const { userId } = req.body;
+  const db = loadDatabase();
+
+  const booking = (db.travelBookings || []).find(b => b.id === id);
+  if (!booking) return res.status(404).json({ error: 'Dossier introuvable.' });
+
+  const item = booking.items.find(i => i.id === itemId);
+  if (!item) return res.status(404).json({ error: 'Prestation introuvable.' });
+
+  item.status = 'IN_PROGRESS';
+  item.checkInDate = new Date().toISOString().split('T')[0];
+  booking.status = 'IN_PROGRESS';
+
+  db.auditLogs.push({
+    id: `log_${Date.now()}`,
+    actorUserId: userId || item.providerOwnerId,
+    actorName: item.providerName,
+    action: 'CHECK_IN_CONFIRMED',
+    entityType: 'BookingItem',
+    entityId: item.id,
+    summary: `Arrivée confirmée pour ${item.providerName} (Dossier ${booking.reference})`,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDatabase(db);
+  res.json(booking);
+});
+
+// 6.7. Complete prestation (COMPLETED)
+app.post('/api/travel-bookings/:id/item/:itemId/complete', (req, res) => {
+  const { id, itemId } = req.params;
+  const { userId } = req.body;
+  const db = loadDatabase();
+
+  const booking = (db.travelBookings || []).find(b => b.id === id);
+  if (!booking) return res.status(404).json({ error: 'Dossier introuvable.' });
+
+  const item = booking.items.find(i => i.id === itemId);
+  if (!item) return res.status(404).json({ error: 'Prestation introuvable.' });
+
+  item.status = 'COMPLETED';
+  item.completedAt = new Date().toISOString().split('T')[0];
+
+  const allCompleted = booking.items.every(i => i.status === 'COMPLETED');
+  if (allCompleted) {
+    booking.status = 'COMPLETED';
+
+    db.notifications.push({
+      id: `notif_${Date.now()}`,
+      recipientUserId: booking.userId,
+      title: 'Séjour terminé - Donnez votre avis vérifié ! 🌟',
+      message: `Votre voyage à ${booking.destination} est terminé. Vous pouvez déposer un avis vérifié sur votre hébergement et votre guide.`,
+      type: 'review_invite',
+      reference: booking.reference,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  db.auditLogs.push({
+    id: `log_${Date.now()}`,
+    actorUserId: userId || item.providerOwnerId,
+    actorName: item.providerName,
+    action: 'TRIP_COMPLETED',
+    entityType: 'BookingItem',
+    entityId: item.id,
+    summary: `Prestation ${item.type} terminée pour ${item.providerName} (Dossier ${booking.reference})`,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDatabase(db);
+  res.json(booking);
+});
+
+// 6.8. Submit verified review
+app.post('/api/travel-bookings/:id/item/:itemId/reviews', (req, res) => {
+  const { id, itemId } = req.params;
+  const { userId, rating, title, comment } = req.body;
+  const db = loadDatabase();
+
+  const booking = (db.travelBookings || []).find(b => b.id === id);
+  if (!booking) return res.status(404).json({ error: 'Dossier introuvable.' });
+
+  if (booking.userId !== userId) {
+    return res.status(403).json({ error: 'Seul le voyageur ayant effectué le séjour peut déposer un avis vérifié.' });
+  }
+
+  const item = booking.items.find(i => i.id === itemId);
+  if (!item) return res.status(404).json({ error: 'Prestation introuvable.' });
+
+  if (item.status !== 'COMPLETED') {
+    return res.status(400).json({ error: 'Un avis ne peut être déposé qu\'une fois la prestation réellement terminée.' });
+  }
+
+  if (item.reviewSubmitted) {
+    return res.status(400).json({ error: 'Un avis a déjà été déposé pour cette prestation.' });
+  }
+
+  const user = db.users.find(u => u.id === userId);
+  const monthYear = new Date(booking.checkOut).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+  const newReview: Review = {
+    id: `rev_verified_${Date.now()}`,
+    establishmentId: item.providerId,
+    bookingId: booking.id,
+    bookingItemId: item.id,
+    authorUserId: user?.id || userId,
+    authorName: user?.name || booking.travelerName,
+    touristName: user?.name || booking.travelerName,
+    targetType: item.type,
+    targetId: item.providerId,
+    targetName: item.providerName,
+    rating: Number(rating) || 5,
+    title: title || 'Avis sur le séjour',
+    comment: comment || '',
+    verified: true,
+    stayDate: `Séjour effectué en ${monthYear}`,
+    status: 'VISIBLE',
+    createdAt: new Date().toISOString().split('T')[0]
+  };
+
+  db.reviews.push(newReview);
+  item.reviewSubmitted = true;
+
+  if (booking.items.every(i => i.reviewSubmitted)) {
+    booking.status = 'REVIEW_SUBMITTED';
+  }
+
+  // Update average rating
+  const targetId = item.providerId;
+  const estReviews = db.reviews.filter(r => r.establishmentId === targetId || r.targetId === targetId);
+  if (estReviews.length > 0) {
+    const total = estReviews.reduce((sum, r) => sum + r.rating, 0);
+    const avg = Number((total / estReviews.length).toFixed(1));
+    const estIndex = db.establishments.findIndex(e => e.id === targetId);
+    if (estIndex !== -1) {
+      db.establishments[estIndex].rating = avg;
+      db.establishments[estIndex].reviewsCount = estReviews.length;
+    }
+  }
+
+  db.auditLogs.push({
+    id: `log_${Date.now()}`,
+    actorUserId: userId,
+    actorName: user?.name || booking.travelerName,
+    action: 'TOURIST_SUBMITTED_REVIEW',
+    entityType: 'Review',
+    entityId: newReview.id,
+    summary: `Avis vérifié déposé (${rating}/5) pour ${item.providerName}`,
+    createdAt: new Date().toISOString()
+  });
+
+  saveDatabase(db);
+  res.status(201).json(newReview);
+});
+
+// 6.9. Notifications API
+app.get('/api/notifications', (req, res) => {
+  const { userId } = req.query;
+  const db = loadDatabase();
+  const notifs = db.notifications || [];
+  if (!userId) return res.json(notifs);
+  res.json(notifs.filter(n => n.recipientUserId === userId));
+});
+
+app.put('/api/notifications/:id/read', (req, res) => {
+  const { id } = req.params;
+  const db = loadDatabase();
+  const notif = (db.notifications || []).find(n => n.id === id);
+  if (notif) notif.read = true;
+  saveDatabase(db);
+  res.json({ success: true });
+});
+
+// 6.10. Audit Logs API (Admin)
+app.get('/api/audit-logs', (req, res) => {
+  const db = loadDatabase();
+  res.json(db.auditLogs || []);
 });
 
 // 7. AI Assistant - Travel Planner using Gemini API

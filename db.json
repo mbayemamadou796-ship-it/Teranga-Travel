@@ -543,6 +543,44 @@
       "rating": 5,
       "comment": "Ousmane est le meilleur guide qu'on puisse espérer au Sénégal ! Passionné, prévenant et d'une culture immense. Il nous a fait découvrir des endroits secrets de Dakar.",
       "createdAt": "2025-02-01"
+    },
+    {
+      "id": "rev_verified_1",
+      "establishmentId": "est_1",
+      "bookingId": "tb_ref_completed",
+      "bookingItemId": "item_ref_acc",
+      "authorUserId": "user_tourist_1",
+      "authorName": "Fatou Diop",
+      "touristName": "Fatou Diop",
+      "targetType": "ACCOMMODATION",
+      "targetId": "est_1",
+      "targetName": "Hôtel Teranga & Spa Almadies",
+      "rating": 5,
+      "title": "Accueil chaleureux et séjour inoubliable",
+      "comment": "Très bon séjour, accueil chaleureux et personnel aux petits soins. La vue sur le coucher de soleil est magique !",
+      "verified": true,
+      "stayDate": "Séjour effectué en décembre 2026",
+      "status": "VISIBLE",
+      "createdAt": "2026-12-21"
+    },
+    {
+      "id": "rev_verified_2",
+      "establishmentId": "est_guide_2",
+      "bookingId": "tb_ref_completed",
+      "bookingItemId": "item_ref_guide",
+      "authorUserId": "user_tourist_1",
+      "authorName": "Fatou Diop",
+      "touristName": "Fatou Diop",
+      "targetType": "GUIDE",
+      "targetId": "est_guide_2",
+      "targetName": "Awa Sané - Guide Écotourisme & Nature Casamance",
+      "rating": 5,
+      "title": "Guide très disponible et passionnée",
+      "comment": "Awa a été formidable du début à la fin. Elle nous a fait découvrir des villages Diolas authentiques avec un respect et une bienveillance remarquables.",
+      "verified": true,
+      "stayDate": "Séjour effectué en décembre 2026",
+      "status": "VISIBLE",
+      "createdAt": "2026-12-21"
     }
   ],
   "messages": [
@@ -815,6 +853,294 @@
       "reported": false,
       "status": "active",
       "createdAt": "2025-02-18T15:20:00Z"
+    }
+  ],
+  "travelBookings": [
+    {
+      "id": "tb_ref_completed",
+      "reference": "TT-2026-8F4K2",
+      "userId": "user_tourist_1",
+      "travelerName": "Fatou Diop",
+      "travelerEmail": "tourist@teranga.sn",
+      "travelerPhone": "+221 77 123 45 67",
+      "destination": "Casamance",
+      "checkIn": "2026-12-15",
+      "checkOut": "2026-12-20",
+      "guestsCount": 2,
+      "message": "Nous souhaitions découvrir les villages Diolas et la forêt sacrée.",
+      "totalPrice": 240000,
+      "status": "COMPLETED",
+      "createdAt": "2026-12-01",
+      "items": [
+        {
+          "id": "item_ref_acc",
+          "bookingId": "tb_ref_completed",
+          "type": "ACCOMMODATION",
+          "providerId": "est_1",
+          "providerName": "Hôtel Teranga & Spa Almadies",
+          "providerOwnerId": "user_prof_dakar",
+          "offerId": "off_1",
+          "offerTitle": "Suite Junior Vue Océan & Balcon Private",
+          "price": 150000,
+          "details": {
+            "roomType": "Suite Junior Océan",
+            "nightsCount": 5
+          },
+          "status": "COMPLETED",
+          "checkInDate": "2026-12-15",
+          "completedAt": "2026-12-20",
+          "reviewSubmitted": true
+        },
+        {
+          "id": "item_ref_guide",
+          "bookingId": "tb_ref_completed",
+          "type": "GUIDE",
+          "providerId": "est_guide_2",
+          "providerName": "Awa Sané - Guide Écotourisme & Nature Casamance",
+          "providerOwnerId": "user_guide_awa",
+          "offerId": "off_guide2_1",
+          "offerTitle": "Journée Immersion Botanique & Culturelle en Casamance",
+          "price": 90000,
+          "details": {
+            "guideName": "Awa Sané",
+            "durationDays": 5,
+            "languages": [
+              "Français",
+              "Wolof",
+              "Diola"
+            ],
+            "specialty": "Culture & Nature"
+          },
+          "status": "COMPLETED",
+          "checkInDate": "2026-12-15",
+          "completedAt": "2026-12-20",
+          "reviewSubmitted": true
+        }
+      ]
+    },
+    {
+      "id": "tb_ref_pending",
+      "reference": "TT-2026-3N8V7",
+      "userId": "user_tourist_1",
+      "travelerName": "Fatou Diop",
+      "travelerEmail": "tourist@teranga.sn",
+      "travelerPhone": "+221 77 123 45 67",
+      "destination": "Sine Saloum",
+      "checkIn": "2027-01-10",
+      "checkOut": "2027-01-14",
+      "guestsCount": 2,
+      "message": "Observation des oiseaux et balade en pirogue dans les bolongs.",
+      "totalPrice": 175000,
+      "status": "PENDING",
+      "createdAt": "2026-12-28",
+      "items": [
+        {
+          "id": "item_pending_acc",
+          "bookingId": "tb_ref_pending",
+          "type": "ACCOMMODATION",
+          "providerId": "est_2",
+          "providerName": "Ecolodge du Saloum",
+          "providerOwnerId": "user_prof_saloum",
+          "offerId": "off_2",
+          "offerTitle": "Bungalow Traditionnel sur Pilotis",
+          "price": 100000,
+          "details": {
+            "roomType": "Bungalow Traditionnel Bolong",
+            "nightsCount": 4
+          },
+          "status": "PENDING"
+        },
+        {
+          "id": "item_pending_guide",
+          "bookingId": "tb_ref_pending",
+          "type": "GUIDE",
+          "providerId": "est_agence_2",
+          "providerName": "Saloum Eco-Aventures & Pirogues",
+          "providerOwnerId": "user_agency_saloum",
+          "offerId": "off_ag2_1",
+          "offerTitle": "Excursion Pirogue Bolongs & Île aux Coquillages de Fadiouth",
+          "price": 75000,
+          "details": {
+            "guideName": "Safiétou Diallo",
+            "durationDays": 3,
+            "languages": [
+              "Français",
+              "Wolof",
+              "Sérère"
+            ],
+            "specialty": "Ornithologie & Pirogue"
+          },
+          "status": "PENDING"
+        }
+      ]
+    },
+    {
+      "id": "tb_1791034610528",
+      "reference": "TT-2026-7JDSI",
+      "userId": "user_tourist_1",
+      "travelerName": "Fatou Diop",
+      "travelerEmail": "tourist@teranga.sn",
+      "travelerPhone": "+221 77 000 00 00",
+      "destination": "Dakar",
+      "checkIn": "2026-12-15",
+      "checkOut": "2026-12-20",
+      "guestsCount": 2,
+      "message": "Visite de Dakar et de Gorée avec le guide Abdoulaye",
+      "totalPrice": 425000,
+      "status": "CONFIRMED",
+      "items": [
+        {
+          "id": "item_acc_1791034610528",
+          "bookingId": "tb_1791034610528",
+          "type": "ACCOMMODATION",
+          "providerId": "est_1",
+          "providerName": "Hôtel Teranga & Spa Almadies",
+          "providerOwnerId": "user_prof_dakar",
+          "offerId": "off_1",
+          "offerTitle": "Suite Junior Vue Océan & Balcon Private",
+          "price": 325000,
+          "details": {
+            "roomType": "Suite Junior Vue Océan & Balcon Private",
+            "nightsCount": 5
+          },
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "item_guide_1791034610529",
+          "bookingId": "tb_1791034610528",
+          "type": "GUIDE",
+          "providerId": "est_guide_1",
+          "providerName": "Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée",
+          "providerOwnerId": "user_guide_dakar",
+          "offerId": "off_guide1_1",
+          "offerTitle": "Accompagnement Guide Privé à la Journée (Dakar / Gorée / Lac Rose)",
+          "price": 100000,
+          "details": {
+            "guideName": "Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée",
+            "durationDays": 5,
+            "languages": [
+              "Français",
+              "Wolof"
+            ]
+          },
+          "status": "CONFIRMED"
+        }
+      ],
+      "createdAt": "2026-10-03"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif_init_1",
+      "recipientUserId": "user_prof_saloum",
+      "title": "Nouvelle demande d'hébergement",
+      "message": "Fatou Diop a envoyé une demande pour Bungalow Traditionnel du 10/01/2027 au 14/01/2027. Réf: TT-2026-3N8V7",
+      "type": "booking_request",
+      "reference": "TT-2026-3N8V7",
+      "read": false,
+      "createdAt": "2026-10-03T13:22:07.916Z"
+    },
+    {
+      "id": "notif_init_2",
+      "recipientUserId": "user_agency_saloum",
+      "title": "Nouvelle demande de guidage",
+      "message": "Fatou Diop a sélectionné votre excursion en pirogue du 10/01/2027 au 14/01/2027. Réf: TT-2026-3N8V7",
+      "type": "booking_request",
+      "reference": "TT-2026-3N8V7",
+      "read": false,
+      "createdAt": "2026-10-03T13:22:07.916Z"
+    },
+    {
+      "id": "notif_1791034610528_1",
+      "recipientUserId": "user_prof_dakar",
+      "title": "Nouvelle demande d'hébergement",
+      "message": "Fatou Diop a envoyé une demande pour Suite Junior Vue Océan & Balcon Private du 2026-12-15 au 2026-12-20 (5 nuits). Réf: TT-2026-7JDSI",
+      "type": "booking_request",
+      "reference": "TT-2026-7JDSI",
+      "read": false,
+      "createdAt": "2026-10-03T13:36:50.528Z"
+    },
+    {
+      "id": "notif_1791034610528_2",
+      "recipientUserId": "user_guide_dakar",
+      "title": "Nouvelle demande de guidage",
+      "message": "Fatou Diop a sélectionné vos services pour 5 jours du 2026-12-15 au 2026-12-20. Réf: TT-2026-7JDSI",
+      "type": "booking_request",
+      "reference": "TT-2026-7JDSI",
+      "read": false,
+      "createdAt": "2026-10-03T13:36:50.528Z"
+    },
+    {
+      "id": "notif_1791034610528_3",
+      "recipientUserId": "user_tourist_1",
+      "title": "Dossier de voyage créé avec succès !",
+      "message": "Votre demande combinée (Hôtel Teranga & Spa Almadies + Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée) a été transmise aux professionnels. Référence : TT-2026-7JDSI",
+      "type": "info",
+      "reference": "TT-2026-7JDSI",
+      "read": false,
+      "createdAt": "2026-10-03T13:36:50.528Z"
+    },
+    {
+      "id": "notif_1791034632583",
+      "recipientUserId": "user_tourist_1",
+      "title": "Prestation confirmée",
+      "message": "Hôtel Teranga & Spa Almadies a validé votre demande. En attente de la seconde confirmation. Réf: TT-2026-7JDSI",
+      "type": "booking_accepted",
+      "reference": "TT-2026-7JDSI",
+      "read": false,
+      "createdAt": "2026-10-03T13:37:12.583Z"
+    },
+    {
+      "id": "notif_1791034641089",
+      "recipientUserId": "user_tourist_1",
+      "title": "Séjour entièrement confirmé ! 🎉",
+      "message": "Votre hébergement et votre guide ont validé votre voyage à Dakar. Référence: TT-2026-7JDSI",
+      "type": "booking_confirmed",
+      "reference": "TT-2026-7JDSI",
+      "read": false,
+      "createdAt": "2026-10-03T13:37:21.089Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "log_init_1",
+      "actorUserId": "user_tourist_1",
+      "actorName": "Fatou Diop",
+      "action": "TOURIST_CREATED_BOOKING",
+      "entityType": "TravelBooking",
+      "entityId": "tb_ref_pending",
+      "summary": "Création du dossier de voyage combiné TT-2026-3N8V7 (Ecolodge du Saloum + Saloum Eco-Aventures)",
+      "createdAt": "2026-10-03T13:22:07.916Z"
+    },
+    {
+      "id": "log_1791034610528",
+      "actorUserId": "user_tourist_1",
+      "actorName": "Fatou Diop",
+      "action": "TOURIST_CREATED_BOOKING",
+      "entityType": "TravelBooking",
+      "entityId": "tb_1791034610528",
+      "summary": "Création du dossier de voyage combiné TT-2026-7JDSI (Hôtel Teranga & Spa Almadies + Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée)",
+      "createdAt": "2026-10-03T13:36:50.528Z"
+    },
+    {
+      "id": "log_1791034632583",
+      "actorUserId": "user_prof_dakar",
+      "actorName": "Hôtel Teranga & Spa Almadies",
+      "action": "HOST_ACCEPTED_BOOKING",
+      "entityType": "BookingItem",
+      "entityId": "item_acc_1791034610528",
+      "summary": "Hôtel Teranga & Spa Almadies a accepté la prestation ACCOMMODATION pour le dossier TT-2026-7JDSI",
+      "createdAt": "2026-10-03T13:37:12.583Z"
+    },
+    {
+      "id": "log_1791034641089",
+      "actorUserId": "user_guide_dakar",
+      "actorName": "Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée",
+      "action": "GUIDE_ACCEPTED_BOOKING",
+      "entityType": "BookingItem",
+      "entityId": "item_guide_1791034610529",
+      "summary": "Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée a accepté la prestation GUIDE pour le dossier TT-2026-7JDSI",
+      "createdAt": "2026-10-03T13:37:21.089Z"
     }
   ]
 }

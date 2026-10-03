@@ -145,13 +145,117 @@ export interface Booking {
   createdAt: string;
 }
 
+// ==================== PARCOURS CRITIQUE : DOSSIER DE VOYAGE COMBINÉ ==================== //
+
+export type TravelBookingStatus = 
+  | 'DRAFT'
+  | 'PENDING'
+  | 'PARTIALLY_CONFIRMED'
+  | 'CONFIRMED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'REVIEW_ELIGIBLE'
+  | 'REVIEW_SUBMITTED'
+  | 'CANCELLED'
+  | 'REJECTED';
+
+export type BookingItemType = 'ACCOMMODATION' | 'GUIDE';
+
+export type BookingItemStatus = 
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'REJECTED'
+  | 'CANCELLED';
+
+export interface BookingItem {
+  id: string;
+  bookingId: string;
+  type: BookingItemType;
+  providerId: string; // establishmentId for host or guide
+  providerName: string;
+  providerOwnerId: string; // userId of the professional
+  offerId: string;
+  offerTitle: string;
+  price: number; // in FCFA
+  details: {
+    roomType?: string;
+    nightsCount?: number;
+    durationDays?: number;
+    guideName?: string;
+    languages?: string[];
+    specialty?: string;
+  };
+  status: BookingItemStatus;
+  rejectionReason?: string;
+  checkInDate?: string;
+  completedAt?: string;
+  reviewSubmitted?: boolean;
+}
+
+export interface TravelBooking {
+  id: string;
+  reference: string; // format TT-2026-XXXXX
+  userId: string; // tourist userId
+  travelerName: string;
+  travelerEmail: string;
+  travelerPhone?: string;
+  destination: SenegalDestination;
+  checkIn: string;
+  checkOut: string;
+  guestsCount: number;
+  message?: string;
+  totalPrice: number; // Total combined in FCFA
+  status: TravelBookingStatus;
+  items: BookingItem[];
+  createdAt: string;
+  updatedAt?: string;
+  cancelledBy?: string;
+  cancellationReason?: string;
+}
+
+export interface Notification {
+  id: string;
+  recipientUserId: string;
+  title: string;
+  message: string;
+  type: 'booking_request' | 'booking_accepted' | 'booking_rejected' | 'booking_confirmed' | 'stay_reminder' | 'stay_completed' | 'review_invite' | 'info';
+  reference?: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface AuditLog {
+  id: string;
+  actorUserId: string;
+  actorName: string;
+  action: string;
+  entityType: 'TravelBooking' | 'BookingItem' | 'Review' | 'Establishment' | 'Offer';
+  entityId: string;
+  oldValue?: string;
+  newValue?: string;
+  summary: string;
+  createdAt: string;
+}
+
 export interface Review {
   id: string;
-  establishmentId: string;
+  establishmentId?: string;
+  bookingId?: string;
+  bookingItemId?: string;
+  authorUserId?: string;
   authorName?: string;
   touristName?: string;
+  targetType?: 'ACCOMMODATION' | 'GUIDE';
+  targetId?: string; // establishmentId or guide establishmentId
+  targetName?: string;
   rating: number;
+  title?: string;
   comment: string;
+  verified?: boolean; // true if linked to a completed booking
+  stayDate?: string; // e.g. "Séjour effectué en décembre 2026"
+  status?: 'VISIBLE' | 'REPORTED' | 'HIDDEN';
   createdAt: string;
 }
 

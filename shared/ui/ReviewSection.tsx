@@ -98,11 +98,26 @@ export default function ReviewSection({ establishmentId, reviews, onAddReview }:
                         {review.authorName.charAt(0)}
                       </div>
                       <div>
-                        <h4 className="font-sans font-bold text-gray-900 text-xs leading-tight">
-                          {review.authorName}
-                        </h4>
-                        <p className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-0.5">
-                          <Calendar size={10} /> {review.createdAt}
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-sans font-bold text-gray-900 text-xs leading-tight">
+                            {review.authorName}
+                          </h4>
+                          {review.verified && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-300 px-1.5 py-0.5 rounded-full">
+                              <span>✓</span>
+                              <span>Avis vérifié</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
+                          <Calendar size={10} /> 
+                          <span>{review.createdAt}</span>
+                          {review.stayDate && (
+                            <>
+                              <span>·</span>
+                              <span className="text-emerald-700 font-semibold">{review.stayDate}</span>
+                            </>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -198,6 +213,14 @@ export default function ReviewSection({ establishmentId, reviews, onAddReview }:
               {loading ? 'Soumission...' : 'Publier mon avis'}
             </button>
           </form>
+
+          {/* Trust and Verification Policy Notice */}
+          <div className="mt-4 pt-3 border-t border-gray-200/60 text-[10px] text-gray-500 flex items-start gap-1.5 leading-tight">
+            <span className="text-emerald-600 font-bold text-xs">✓</span>
+            <span>
+              <strong>Authenticité garantie :</strong> Le badge <em>« Avis vérifié »</em> est exclusivement délivré aux voyageurs ayant effectué et validé un séjour complet via un dossier de voyage officiel sur Teranga Travel.
+            </span>
+          </div>
         </div>
       </div>
     </div>

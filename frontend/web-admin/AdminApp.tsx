@@ -8,7 +8,7 @@ import {
   Shield, Check, X, AlertCircle, TrendingUp, Users, Building, 
   MapPin, Sliders, DollarSign, Calendar, Eye, RefreshCw, Star, MessageSquare
 } from 'lucide-react';
-import { Establishment, Offer, Booking, User as UserType } from '../../shared/types';
+import { Establishment, Offer, Booking, User as UserType, TravelBooking, BookingItem } from '../../shared/types';
 import { TerangaLogo } from '../../shared/ui/TerangaLogo';
 import AdminCommunityManager from './AdminCommunityManager';
 
@@ -29,10 +29,12 @@ export default function AdminApp({
   const [loading, setLoading] = useState(false);
   const [allOffers, setAllOffers] = useState<Offer[]>([]);
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [allTravelBookings, setAllTravelBookings] = useState<TravelBooking[]>([]);
   const [allUsers, setAllUsers] = useState<UserType[]>([]);
+  const [travelStatusFilter, setTravelStatusFilter] = useState<string>('all');
   
   // Tab for different admin subsections
-  const [adminTab, setAdminTab] = useState<'approvals' | 'offers' | 'users' | 'bookings' | 'mapping' | 'dossiers_mirror' | 'communities'>('approvals');
+  const [adminTab, setAdminTab] = useState<'approvals' | 'offers' | 'users' | 'bookings' | 'travel_bookings' | 'mapping' | 'dossiers_mirror' | 'communities'>('approvals');
   const [selectedMirrorOfferId, setSelectedMirrorOfferId] = useState<string | null>(null);
   
   // Rejection Reason dialog state
@@ -50,6 +52,10 @@ export default function AdminApp({
       const bookingsRes = await fetch('/api/bookings?role=admin');
       if (bookingsRes.ok) {
         setAllBookings(await bookingsRes.json());
+      }
+      const travelRes = await fetch('/api/travel-bookings?role=admin');
+      if (travelRes.ok) {
+        setAllTravelBookings(await travelRes.json());
       }
       const usersRes = await fetch('/api/auth/users');
       if (usersRes.ok) {
@@ -322,6 +328,18 @@ export default function AdminApp({
         </button>
 
         <button
+          onClick={() => setAdminTab('travel_bookings')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            adminTab === 'travel_bookings'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <span>🇸🇳</span>
+          <span>Dossiers de Voyage ({allTravelBookings.length})</span>
+        </button>
+
+        <button
           onClick={() => setAdminTab('bookings')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
             adminTab === 'bookings'
@@ -329,7 +347,7 @@ export default function AdminApp({
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          <Calendar size={14} /> Réservations ({allBookings.length})
+          <Calendar size={14} /> Réservations simples ({allBookings.length})
         </button>
 
         <button
@@ -655,6 +673,124 @@ export default function AdminApp({
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* TAB: DOSSIERS DE VOYAGE COMBINÉS (PARCOURS CRITIQUE) */}
+        {adminTab === 'travel_bookings' && (
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-gray-100 pb-4">
+              <div>
+                <span className="bg-blue-100 text-blue-900 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-200 uppercase tracking-wider inline-block mb-1">
+                  🇸🇳 SUPERVISION DU PARCOURS CRITIQUE
+                </span>
+                <h3 className="font-sans font-bold text-base text-gray-900 flex items-center gap-2">
+                  <span>📂</span>
+                  <span>Dossiers de Voyage Combinés (Hébergement + Guide)</span>
+                </h3>
+                <p className="text-gray-500 text-xs">
+                  Supervisez le cycle de vie complet de bout en bout : demande, confirmations prestataires, déroulement du séjour et avis vérifiés.
+                </p>
+              </div>
+
+              {/* Status filter */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-gray-400 font-medium">Filtrer par état :</span>
+                <select
+                  value={travelStatusFilter}
+                  onChange={(e) => setTravelStatusFilter(e.target.value)}
+                  className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Tous ({allTravelBookings.length})</option>
+                  <option value="PENDING">PENDING (En attente)</option>
+                  <option value="PARTIALLY_CONFIRMED">PARTIALLY_CONFIRMED</option>
+                  <option value="CONFIRMED">CONFIRMED (Confirmés)</option>
+                  <option value="IN_PROGRESS">IN_PROGRESS (En cours)</option>
+                  <option value="COMPLETED">COMPLETED (Terminés)</option>
+                  <option value="REVIEW_SUBMITTED">REVIEW_SUBMITTED</option>
+                  <option value="CANCELLED">CANCELLED (Annulés)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* List of TravelBookings */}
+            {allTravelBookings.filter(tb => travelStatusFilter === 'all' || tb.status === travelStatusFilter).length === 0 ? (
+              <div className="py-12 text-center text-gray-400 text-xs bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                Aucun dossier de voyage combiné pour ce filtre.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {allTravelBookings
+                  .filter(tb => travelStatusFilter === 'all' || tb.status === travelStatusFilter)
+                  .map(tb => (
+                    <div key={tb.id} className="p-5 rounded-2xl border border-gray-200 bg-white shadow-2xs space-y-4">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-gray-100 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono font-bold text-white bg-slate-900 px-2 py-0.5 rounded">
+                              {tb.reference}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                              tb.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+                              tb.status === 'IN_PROGRESS' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                              tb.status === 'COMPLETED' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                              tb.status === 'REVIEW_SUBMITTED' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
+                              tb.status === 'CANCELLED' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                              'bg-amber-50 text-amber-800 border-amber-200'
+                            }`}>
+                              Dossier : {tb.status}
+                            </span>
+                            <span className="text-xs font-bold text-gray-700">· {tb.destination}</span>
+                          </div>
+
+                          <h4 className="text-sm font-bold text-gray-900 mt-1">
+                            Voyageur : {tb.travelerName} ({tb.travelerEmail} · {tb.travelerPhone})
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            Séjour du {tb.checkIn} au {tb.checkOut} · {tb.guestsCount} voyageur(s)
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-gray-400 block">Total Dossier</span>
+                          <span className="text-base font-black text-emerald-700 font-mono">
+                            {tb.totalPrice.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Items */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {tb.items.map(item => (
+                          <div key={item.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200/70 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span>{item.type === 'ACCOMMODATION' ? '🏨' : '🥾'}</span>
+                              <div>
+                                <p className="font-bold text-gray-900">{item.providerName}</p>
+                                <p className="text-[10px] text-gray-500">{item.offerTitle}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-gray-200">
+                                {item.status}
+                              </span>
+                              <span className="text-[10px] text-gray-500 block font-mono mt-0.5">
+                                {item.price.toLocaleString()} FCFA
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {tb.message && (
+                        <p className="text-xs text-gray-600 bg-blue-50/40 p-2.5 rounded-xl border border-blue-100">
+                          <strong>Note du voyageur :</strong> "{tb.message}"
+                        </p>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
 

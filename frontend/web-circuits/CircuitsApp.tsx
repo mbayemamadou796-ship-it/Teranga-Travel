@@ -10,7 +10,7 @@ import {
   User, Star, BookOpen, Clock, RefreshCw, Layers, Folder, FileText,
   TrendingUp, LayoutDashboard, Lock, Unlock, Check
 } from 'lucide-react';
-import { Establishment, Offer, Booking, Review, User as UserType, SenegalDestination } from '../../shared/types';
+import { Establishment, Offer, Booking, Review, User as UserType, SenegalDestination, TravelBooking, BookingItem } from '../../shared/types';
 import { TerangaLogo } from '../../shared/ui/TerangaLogo';
 
 interface CircuitsAppProps {
@@ -37,7 +37,9 @@ export default function CircuitsApp({
   const [loading, setLoading] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [travelBookings, setTravelBookings] = useState<TravelBooking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Form States for modifying profile
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -94,6 +96,11 @@ export default function CircuitsApp({
       if (bookingsRes.ok) {
         setBookings(await bookingsRes.json());
       }
+      // Load combined travel bookings for this guide / agency
+      const travelRes = await fetch(`/api/travel-bookings?role=professional&userId=${currentUser?.id}&establishmentId=${myProfile.id}`);
+      if (travelRes.ok) {
+        setTravelBookings(await travelRes.json());
+      }
       const reviewsRes = await fetch(`/api/reviews?establishmentId=${myProfile.id}`);
       if (reviewsRes.ok) {
         setReviews(await reviewsRes.json());
@@ -102,6 +109,36 @@ export default function CircuitsApp({
       console.error('Error fetching circuits/guides pro data:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle critical journey actions on a guide booking item
+  const handleTravelBookingAction = async (
+    bookingId: string, 
+    itemId: string, 
+    action: 'accept' | 'reject' | 'check-in' | 'complete',
+    reason?: string
+  ) => {
+    if (!currentUser) return;
+    setActionLoading(`${bookingId}_${itemId}_${action}`);
+    try {
+      const endpoint = `/api/travel-bookings/${bookingId}/item/${itemId}/${action}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          reason: reason || (action === 'reject' ? 'Indisponibilité pour mission de guidage' : undefined)
+        })
+      });
+      if (response.ok) {
+        await fetchMyData();
+        await onRefreshData();
+      }
+    } catch (err) {
+      console.error('Action error:', err);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -948,6 +985,170 @@ export default function CircuitsApp({
               </div>
             </div>
           )}
+
+          {/* SECTION : DEMANDES DE GUIDAGE (PARCOURS CRITIQUE) */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-gray-100 pb-4">
+              <div>
+                <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2.5 py-1 rounded-full border border-amber-200 uppercase tracking-wider inline-block mb-1">
+                  🇸🇳 FIL ROUGE — MISSIONS DE GUIDAGE
+                </span>
+                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <span>🥾</span>
+                  <span>Demandes de Guidage & Séjours Combinés</span>
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Gérez les missions de guidage réservées par les voyageurs dans le cadre d'un dossier de voyage combiné.
+                </p>
+              </div>
+
+              <span className="text-xs font-bold text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 self-start sm:self-auto">
+                {travelBookings.length} dossier(s) de guidage
+              </span>
+            </div>
+
+            {travelBookings.length === 0 ? (
+              <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-xs text-gray-400">
+                Aucune mission de guidage en attente pour le moment.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {travelBookings.map(tb => {
+                  const myItem = tb.items.find(i => 
+                    i.type === 'GUIDE' && 
+                    (i.providerId === myProfile?.id || i.providerOwnerId === currentUser?.id)
+                  );
+                  if (!myItem) return null;
+
+                  const isPending = myItem.status === 'PENDING';
+                  const isConfirmed = myItem.status === 'CONFIRMED';
+                  const isInProgress = myItem.status === 'IN_PROGRESS';
+                  const isCompleted = myItem.status === 'COMPLETED';
+
+                  return (
+                    <div key={tb.id} className="p-5 rounded-2xl border border-gray-200 bg-white shadow-2xs space-y-4">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-gray-100 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono font-bold text-white bg-slate-900 px-2 py-0.5 rounded">
+                              {tb.reference}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              isConfirmed ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+                              isInProgress ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                              isCompleted ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                              'bg-amber-50 text-amber-800 border-amber-200'
+                            }`}>
+                              Guidage : {myItem.status}
+                            </span>
+                            <span className="text-[10px] text-gray-400">
+                              (Dossier global : {tb.status})
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-gray-900 mt-1">
+                            Voyageur : {tb.travelerName}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            📧 {tb.travelerEmail} · 📞 {tb.travelerPhone}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-gray-400 block">Honoraires guidage :</span>
+                          <span className="text-sm font-black text-amber-700 font-mono">
+                            {myItem.price.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-amber-50/50 p-3 rounded-xl border border-amber-100">
+                        <div>
+                          <span className="text-[10px] text-gray-400 block font-semibold">Prestation</span>
+                          <span className="font-bold text-gray-800">{myItem.offerTitle}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-gray-400 block font-semibold">Dates de guidage</span>
+                          <span className="font-mono text-gray-800">{tb.checkIn} → {tb.checkOut} ({myItem.details.durationDays} jours)</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-gray-400 block font-semibold">Groupe de voyageurs</span>
+                          <span className="font-bold text-gray-800">{tb.guestsCount} personne(s)</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-gray-400 block font-semibold">Hébergement associé</span>
+                          <span className="font-bold text-gray-800">
+                            {tb.items.find(i => i.type === 'ACCOMMODATION')?.providerName || 'Hébergement autonome'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {tb.message && (
+                        <div className="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                          <span className="font-bold text-gray-900">Message / Attentes du voyageur :</span> "{tb.message}"
+                        </div>
+                      )}
+
+                      {/* Action buttons following Section 14, 20 & 21 of Critical Journey */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-gray-100">
+                        <span className="text-[11px] text-gray-400">
+                          Réf unique : {tb.reference} · Créée le {tb.createdAt}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          {isPending && (
+                            <>
+                              <button
+                                onClick={() => handleTravelBookingAction(tb.id, myItem.id, 'reject')}
+                                disabled={Boolean(actionLoading)}
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-xl border border-rose-200 text-xs cursor-pointer transition-all disabled:opacity-50"
+                              >
+                                Refuser
+                              </button>
+                              <button
+                                onClick={() => handleTravelBookingAction(tb.id, myItem.id, 'accept')}
+                                disabled={Boolean(actionLoading)}
+                                className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs cursor-pointer shadow-xs transition-all disabled:opacity-50"
+                              >
+                                {actionLoading?.includes('accept') ? 'Validation...' : '✓ Accepter la mission de guidage'}
+                              </button>
+                            </>
+                          )}
+
+                          {isConfirmed && (
+                            <button
+                              onClick={() => handleTravelBookingAction(tb.id, myItem.id, 'check-in')}
+                              disabled={Boolean(actionLoading)}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs cursor-pointer shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              <span>🥾</span>
+                              <span>{actionLoading?.includes('check-in') ? 'Démarrage...' : 'Démarrer la prestation'}</span>
+                            </button>
+                          )}
+
+                          {isInProgress && (
+                            <button
+                              onClick={() => handleTravelBookingAction(tb.id, myItem.id, 'complete')}
+                              disabled={Boolean(actionLoading)}
+                              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs cursor-pointer shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              <span>🏁</span>
+                              <span>{actionLoading?.includes('complete') ? 'Validation...' : 'Valider fin de prestation'}</span>
+                            </button>
+                          )}
+
+                          {isCompleted && (
+                            <span className="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 px-3 py-1 rounded-xl">
+                              ✓ Mission terminée — Voyageur éligible à l'avis vérifié
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

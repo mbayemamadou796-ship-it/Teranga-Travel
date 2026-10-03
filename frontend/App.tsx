@@ -8,9 +8,9 @@ import {
   Compass, Search, User, MapPin, Calendar, Users, Star, Coffee, Wifi, Phone, Mail, 
   Sparkles, Check, X, Shield, ChevronRight, Plus, ArrowLeft, Sun, Waves, Eye, 
   RefreshCw, ClipboardList, Building, CheckCircle, HelpCircle, ShieldAlert, Heart, Info,
-  LogOut, ShieldCheck, Lock
+  LogOut, ShieldCheck, Lock, Luggage
 } from 'lucide-react';
-import { SenegalDestination, Destination, Establishment, Offer, Booking, Review, User as UserType } from '../shared/types';
+import { SenegalDestination, Destination, Establishment, Offer, Booking, Review, User as UserType, TravelBooking } from '../shared/types';
 import { INITIAL_DESTINATIONS } from '../backend/data';
 import MapMock from '../shared/ui/MapMock';
 import AIPlanner from '../shared/ui/AIPlanner';
@@ -24,6 +24,8 @@ import { TerangaLogo } from '../shared/ui/TerangaLogo';
 import MessagingWidget from '../shared/ui/MessagingWidget';
 import AuthEntryGateway from './components/AuthEntryGateway';
 import PublicShowcase from './components/PublicShowcase';
+import CombinedBookingModal from './components/CombinedBookingModal';
+import TravelBookingDetailsModal from './components/TravelBookingDetailsModal';
 
 export default function App() {
   // Navigation & Routing State: Exactly 2 applications in the top bar as requested
@@ -39,6 +41,13 @@ export default function App() {
   const [selectedOffers, setSelectedOffers] = useState<Offer[]>([]);
   const [selectedReviews, setSelectedReviews] = useState<Review[]>([]);
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
+  const [travelBookings, setTravelBookings] = useState<TravelBooking[]>([]);
+  const [isCombinedBookingOpen, setIsCombinedBookingOpen] = useState(false);
+  const [selectedTravelBooking, setSelectedTravelBooking] = useState<TravelBooking | null>(null);
+  const [combinedInitialAcc, setCombinedInitialAcc] = useState<Establishment | null>(null);
+  const [combinedInitialOffer, setCombinedInitialOffer] = useState<Offer | null>(null);
+  const [combinedInitialGuide, setCombinedInitialGuide] = useState<Establishment | null>(null);
+  const [combinedInitialDest, setCombinedInitialDest] = useState<SenegalDestination | null>(null);
   const [allUsers, setAllUsers] = useState<UserType[]>([]);
   
   // Filtering & Search
@@ -224,15 +233,28 @@ export default function App() {
         setUserBookings(await bookingsRes.json());
       }
 
+      // Fetch combined travel bookings for this user
+      const travelUrl = `/api/travel-bookings?userId=${currentUser.id}&role=${currentUser.role}${currentUser.establishmentId ? `&establishmentId=${currentUser.establishmentId}` : ''}`;
+      const travelRes = await fetch(travelUrl);
+      if (travelRes.ok) {
+        setTravelBookings(await travelRes.json());
+      }
+
       // Fetch all users if admin
       if (currentUser.role === 'admin') {
         const response = await fetch('/api/establishments'); // just triggers refresh
-        // For simple MVP we query users if needed, or filter db.json.
-        // Let's create an endpoint or simulate in memory.
       }
     } catch (e) {
       console.error('Error fetching user space details:', e);
     }
+  };
+
+  const handleOpenCombined = (acc?: Establishment, off?: Offer, guide?: Establishment, dest?: SenegalDestination) => {
+    setCombinedInitialAcc(acc || null);
+    setCombinedInitialOffer(off || null);
+    setCombinedInitialGuide(guide || null);
+    setCombinedInitialDest(dest || null);
+    setIsCombinedBookingOpen(true);
   };
 
   useEffect(() => {
@@ -507,6 +529,7 @@ export default function App() {
           setAuthInitialMode('login');
           setIsAuthOpen(true);
         }}
+        onOpenCombinedBooking={() => handleOpenCombined()}
       />
     );
   }
@@ -672,8 +695,19 @@ export default function App() {
             })}
           </nav>
 
-          {/* User Section & Mobile Trigger */}
-          <div className="flex items-center gap-3">
+          {/* Quick Combined Trip action button */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => handleOpenCombined()}
+              title="Composer une réservation combinée (Hébergement + Guide local)"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm shadow-amber-500/20 cursor-pointer transition-all"
+            >
+              <span>🧳</span>
+              <span className="hidden sm:inline">Séjour combiné</span>
+            </button>
+
+            {/* User Section & Mobile Trigger */}
+            <div className="flex items-center gap-3">
             {currentUser ? (
               <div className="flex items-center gap-2">
                 <button
@@ -712,6 +746,7 @@ export default function App() {
                 <span>Se connecter</span>
               </button>
             )}
+            </div>
           </div>
         </div>
 
@@ -1947,6 +1982,130 @@ export default function App() {
                       )}
                     </div>
 
+                    {/* 2.5. MES DOSSIERS DE VOYAGE COMBINÉS (FIL ROUGE / PARCOURS CRITIQUE) */}
+                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs space-y-6">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-gray-100 pb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="bg-emerald-100 text-emerald-900 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-200 uppercase tracking-wider">
+                              🇸🇳 Parcours Critique
+                            </span>
+                            <span className="text-xs text-gray-400">Dossiers combinés</span>
+                          </div>
+                          <h3 className="font-sans font-bold text-base text-gray-900 flex items-center gap-2 mt-1">
+                            <span>🧳</span>
+                            <span>Mes Dossiers de Voyage ({travelBookings.length})</span>
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            Suivez vos réservations d'hébergements et de guides, vos confirmations et le dépôt de vos avis vérifiés.
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => handleOpenCombined()}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 cursor-pointer transition-all self-start sm:self-auto"
+                        >
+                          <Plus size={15} />
+                          <span>Nouveau séjour combiné</span>
+                        </button>
+                      </div>
+
+                      {travelBookings.length === 0 ? (
+                        <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-xs text-gray-400">
+                          Vous n'avez pas encore de dossier de voyage combiné.
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {travelBookings.map(tb => {
+                            const isCompleted = tb.status === 'COMPLETED';
+                            const hasPendingReview = isCompleted && tb.items.some(i => i.status === 'COMPLETED' && !i.reviewSubmitted);
+
+                            return (
+                              <div
+                                key={tb.id}
+                                className="p-5 rounded-2xl border border-gray-200 bg-white hover:border-emerald-300 transition-all shadow-2xs space-y-4"
+                              >
+                                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-gray-100 pb-3">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-mono font-bold text-white bg-slate-900 px-2 py-0.5 rounded">
+                                        {tb.reference}
+                                      </span>
+                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                        tb.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+                                        tb.status === 'IN_PROGRESS' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' :
+                                        tb.status === 'COMPLETED' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                                        tb.status === 'REVIEW_SUBMITTED' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
+                                        tb.status === 'CANCELLED' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                                        'bg-amber-50 text-amber-800 border-amber-200'
+                                      }`}>
+                                        {tb.status === 'CONFIRMED' ? 'Séjour Confirmé 🎉' :
+                                         tb.status === 'PARTIALLY_CONFIRMED' ? 'Partiellement Confirmé (1/2)' :
+                                         tb.status === 'IN_PROGRESS' ? 'Séjour en cours 🇸🇳' :
+                                         tb.status === 'COMPLETED' ? 'Séjour Terminé' :
+                                         tb.status === 'REVIEW_SUBMITTED' ? 'Avis Vérifiés Publiés ⭐' :
+                                         tb.status === 'CANCELLED' ? 'Annulé' : 'En attente des confirmations'}
+                                      </span>
+                                      <span className="text-xs font-bold text-gray-700">· {tb.destination}</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      🗓️ Du {tb.checkIn} au {tb.checkOut} · 👥 {tb.guestsCount} voyageur(s)
+                                    </p>
+                                  </div>
+
+                                  <div className="text-right">
+                                    <span className="text-[10px] text-gray-400 block">Total combiné :</span>
+                                    <span className="text-base font-black text-emerald-700 font-mono">
+                                      {tb.totalPrice.toLocaleString()} FCFA
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Prestations recap pills */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                  {tb.items.map(item => (
+                                    <div key={item.id} className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <span>{item.type === 'ACCOMMODATION' ? '🏨' : '🥾'}</span>
+                                        <div>
+                                          <p className="font-bold text-gray-900">{item.providerName}</p>
+                                          <p className="text-[10px] text-gray-500">{item.offerTitle}</p>
+                                        </div>
+                                      </div>
+                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-gray-200">
+                                        {item.status}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Bottom action bar */}
+                                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-gray-100">
+                                  {hasPendingReview ? (
+                                    <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                                      <Sparkles size={14} /> Séjour terminé : vous êtes invité à déposer un avis vérifié !
+                                    </span>
+                                  ) : (
+                                    <span className="text-[11px] text-gray-400 font-mono">
+                                      Dossier {tb.reference} · Créé le {tb.createdAt}
+                                    </span>
+                                  )}
+
+                                  <button
+                                    onClick={() => setSelectedTravelBooking(tb)}
+                                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs"
+                                  >
+                                    <Luggage size={14} />
+                                    <span>Consulter le dossier de voyage</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
                     {/* 3. DEMANDES DE RÉSERVATIONS */}
                     <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-xs space-y-6">
                       <h3 className="font-sans font-bold text-base text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-4">
@@ -2501,6 +2660,43 @@ export default function App() {
           onSuccess={(booking) => {
             // Update bookings list dynamically
             setUserBookings((prev) => [booking, ...prev]);
+          }}
+        />
+      )}
+
+      {/* Combined Booking Modal (Parcours critique Hébergement + Guide) */}
+      <CombinedBookingModal
+        isOpen={isCombinedBookingOpen}
+        onClose={() => setIsCombinedBookingOpen(false)}
+        currentUser={currentUser}
+        establishments={establishments}
+        initialAccommodation={combinedInitialAcc}
+        initialOffer={combinedInitialOffer}
+        initialGuide={combinedInitialGuide}
+        initialDestination={combinedInitialDest}
+        onOpenAuth={(mode) => {
+          setIsCombinedBookingOpen(false);
+          setAuthInitialMode(mode || 'login');
+          setIsAuthOpen(true);
+        }}
+        onSuccess={(booking) => {
+          setTravelBookings((prev) => [booking, ...prev]);
+        }}
+      />
+
+      {/* Travel Booking Details Modal */}
+      {selectedTravelBooking && (
+        <TravelBookingDetailsModal
+          isOpen={Boolean(selectedTravelBooking)}
+          onClose={() => setSelectedTravelBooking(null)}
+          booking={selectedTravelBooking}
+          currentUser={currentUser}
+          onRefresh={async () => {
+            await fetchBookingsAndUsers();
+            if (selectedTravelBooking) {
+              const res = await fetch(`/api/travel-bookings/${selectedTravelBooking.id}`);
+              if (res.ok) setSelectedTravelBooking(await res.json());
+            }
           }}
         />
       )}

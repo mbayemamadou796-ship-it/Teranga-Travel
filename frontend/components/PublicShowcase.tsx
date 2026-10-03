@@ -19,6 +19,7 @@ interface PublicShowcaseProps {
   onOpenAuth: (mode?: 'login' | 'register') => void;
   onSelectEstablishment: (est: Establishment) => void;
   onSelectOfferBooking: (offer: Offer, est: Establishment) => void;
+  onOpenCombinedBooking?: () => void;
 }
 
 export default function PublicShowcase({
@@ -26,7 +27,8 @@ export default function PublicShowcase({
   establishments,
   onOpenAuth,
   onSelectEstablishment,
-  onSelectOfferBooking
+  onSelectOfferBooking,
+  onOpenCombinedBooking
 }: PublicShowcaseProps) {
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [regionFilter, setRegionFilter] = useState<string>('all');
@@ -214,6 +216,16 @@ export default function PublicShowcase({
                 <Building size={17} />
                 <span>Voir les hébergements</span>
               </button>
+
+              {onOpenCombinedBooking && (
+                <button
+                  onClick={onOpenCombinedBooking}
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black px-6 py-3.5 rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/30 transition-all cursor-pointer"
+                >
+                  <span>🧳</span>
+                  <span>Composer mon séjour (Hébergement + Guide)</span>
+                </button>
+              )}
             </div>
 
             {/* Quick Senegal Highlights */}
