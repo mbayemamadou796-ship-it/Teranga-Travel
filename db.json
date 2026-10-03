@@ -1,0 +1,820 @@
+{
+  "users": [
+    {
+      "id": "user_tourist_1",
+      "email": "tourist@teranga.sn",
+      "password": "tourist",
+      "name": "Fatou Diop",
+      "role": "tourist"
+    },
+    {
+      "id": "user_prof_dakar",
+      "email": "professional@teranga.sn",
+      "password": "professional",
+      "name": "Cheikh Ndiaye",
+      "role": "professional",
+      "establishmentId": "est_1"
+    },
+    {
+      "id": "user_prof_saloum",
+      "email": "saloum@teranga.sn",
+      "password": "saloum",
+      "name": "Babacar Faye",
+      "role": "professional",
+      "establishmentId": "est_2"
+    },
+    {
+      "id": "user_admin_1",
+      "email": "admin@teranga.sn",
+      "password": "admin",
+      "name": "Modou Sow",
+      "role": "admin"
+    },
+    {
+      "id": "user_agency_dakar",
+      "email": "agency_dakar@teranga.sn",
+      "password": "agency",
+      "name": "Moussa Gueye",
+      "role": "professional",
+      "establishmentId": "est_agence_1"
+    },
+    {
+      "id": "user_agency_saloum",
+      "email": "agency_saloum@teranga.sn",
+      "password": "agency",
+      "name": "Safiétou Diallo",
+      "role": "professional",
+      "establishmentId": "est_agence_2"
+    },
+    {
+      "id": "user_agency_casamance",
+      "email": "agency_casamance@teranga.sn",
+      "password": "agency",
+      "name": "Lamine Sané",
+      "role": "professional",
+      "establishmentId": "est_agence_3"
+    },
+    {
+      "id": "user_agency_stlouis",
+      "email": "agency_stlouis@teranga.sn",
+      "password": "agency",
+      "name": "Awa Fall",
+      "role": "professional",
+      "establishmentId": "est_agence_4"
+    },
+    {
+      "id": "user_agency_kedougou",
+      "email": "agency_kedougou@teranga.sn",
+      "password": "agency",
+      "name": "Ousmane Cissokho",
+      "role": "professional",
+      "establishmentId": "est_agence_5"
+    },
+    {
+      "id": "user_guide_dakar",
+      "email": "guide_dakar@teranga.sn",
+      "password": "guide",
+      "name": "Abdoulaye Ndiaye",
+      "role": "professional",
+      "establishmentId": "est_guide_1"
+    },
+    {
+      "id": "user_guide_saloum",
+      "email": "guide_saloum@teranga.sn",
+      "password": "guide",
+      "name": "Bamba Diouf",
+      "role": "professional",
+      "establishmentId": "est_guide_2"
+    },
+    {
+      "id": "user_guide_kedougou",
+      "email": "guide_kedougou@teranga.sn",
+      "password": "guide",
+      "name": "Samba Diallo",
+      "role": "professional",
+      "establishmentId": "est_guide_3"
+    }
+  ],
+  "establishments": [
+    {
+      "id": "est_1",
+      "name": "Hôtel Teranga & Spa Almadies",
+      "type": "hotel",
+      "description": "Un havre de paix éco-responsable surplombant l'océan Atlantique à la pointe des Almadies. Profitez de chambres spacieuses décorées par des artisans locaux, d'une piscine à débordement et d'une cuisine raffinée aux saveurs de la mer.",
+      "location": "Dakar",
+      "address": "Pointe des Almadies, BP 12000, Dakar",
+      "status": "approved",
+      "contactEmail": "contact@hotel-teranga-almadies.sn",
+      "contactPhone": "+221 33 820 12 34",
+      "rating": 4.8,
+      "reviewsCount": 24,
+      "images": [
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80"
+      ],
+      "amenities": [
+        "Wifi Haut Débit",
+        "Piscine Océanique",
+        "Restaurant Gastronomique",
+        "Spa & Massage",
+        "Climatisation Éco",
+        "Parking Sécurisé"
+      ],
+      "ownerId": "user_prof_dakar"
+    },
+    {
+      "id": "est_2",
+      "name": "Ecolodge du Saloum",
+      "type": "campement",
+      "description": "Sanctuaire naturel niché au bord d'un bolong calme. Logez dans des bungalows traditionnels sur pilotis construits en matériaux locaux. Observation privilégiée des oiseaux et immersion totale dans la sérénité du delta.",
+      "location": "Sine Saloum",
+      "address": "Village de Toubacouta, Delta du Saloum",
+      "status": "approved",
+      "contactEmail": "reservation@ecolodge-saloum.sn",
+      "contactPhone": "+221 33 948 55 10",
+      "rating": 4.9,
+      "reviewsCount": 18,
+      "images": [
+        "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80"
+      ],
+      "amenities": [
+        "Pirogues Solaires",
+        "Restaurant Produits Frais",
+        "Panneaux Solaires 100%",
+        "Excursions Ornithologiques",
+        "Bar de Mangrove"
+      ],
+      "ownerId": "user_prof_saloum"
+    },
+    {
+      "id": "est_3",
+      "name": "Maison d'Hôtes Les Bougainvilliers",
+      "type": "maison_hotes",
+      "description": "Une grande demeure coloniale restaurée avec passion au cœur de l'île historique de Gorée. Jardin tropical ombragé, terrasses avec vue sur la baie et petit-déjeuner fait maison à base de fruits frais locaux.",
+      "location": "Dakar",
+      "address": "Rue de la Compagnie, Île de Gorée, Dakar",
+      "status": "approved",
+      "contactEmail": "contact@bougainvilliers-goree.sn",
+      "contactPhone": "+221 33 821 44 22",
+      "rating": 4.7,
+      "reviewsCount": 31,
+      "images": [
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80"
+      ],
+      "amenities": [
+        "Wifi Gratuit",
+        "Jardin Tropical",
+        "Petit Déjeuner Inclus",
+        "Terrasse Végétalisée",
+        "Service de Guide Historien"
+      ],
+      "ownerId": "user_prof_dakar"
+    },
+    {
+      "id": "est_4",
+      "name": "Cap Skirring Ocean Lodge",
+      "type": "hotel",
+      "description": "Bungalows de charme sous une cocoteraie luxuriante au bord de la plage de sable fin de Cap Skirring. Idéal pour des vacances de détente entre océan Atlantique et forêts de Casamance.",
+      "location": "Casamance",
+      "address": "Route des Plages, Cap Skirring",
+      "status": "pending",
+      "contactEmail": "info@cap-ocean-lodge.sn",
+      "contactPhone": "+221 33 993 50 00",
+      "rating": 4.6,
+      "reviewsCount": 12,
+      "images": [
+        "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80"
+      ],
+      "amenities": [
+        "Plage Privée",
+        "Restaurant Grill Océan",
+        "Piscine",
+        "Activité Pêche & Kayak"
+      ],
+      "ownerId": "user_prof_saloum"
+    },
+    {
+      "id": "est_agence_1",
+      "name": "Dakar Teranga Tours & Excursions",
+      "type": "agence",
+      "description": "Agence de voyages réceptive agréée par le Ministère du Tourisme. Spécialisée dans l'organisation de circuits personnalisés à Dakar, Gorée, le Lac Rose et le Sine Saloum avec chauffeurs et guides professionnels.",
+      "location": "Dakar",
+      "address": "Avenue Léopold Sédar Senghor, Dakar Plateau",
+      "status": "approved",
+      "contactEmail": "contact@dakarterangatours.sn",
+      "contactPhone": "+221 33 823 88 00",
+      "rating": 4.9,
+      "reviewsCount": 42,
+      "images": [
+        "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=800&q=80"
+      ],
+      "amenities": [
+        "Véhicules Climatisés VIP",
+        "Guides Bilingues FR/EN",
+        "Circuits Sur Mesure",
+        "Assurance Voyage Incluse"
+      ],
+      "ownerId": "user_agency_dakar"
+    },
+    {
+      "id": "est_agence_2",
+      "name": "Saloum Eco-Aventures & Pirogues",
+      "type": "agence",
+      "description": "Opérateur local engagé dans l'écotourisme communautaire dans le delta du Sine Saloum. Excursions en pirogues traditionnelles, safaris ornithologiques et nuits chez l'habitant dans les îles.",
+      "location": "Sine Saloum",
+      "address": "Embarcadère Principal, Ndangane Campement",
+      "status": "approved",
+      "contactEmail": "contact@saloum-ecoaventures.sn",
+      "contactPhone": "+221 33 949 11 22",
+      "rating": 4.8,
+      "reviewsCount": 29,
+      "images": [
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+      ],
+      "amenities": [
+        "Piroguiers Certifiés",
+        "Gilets de Sauvetage Enfants/Adultes",
+        "Repas Grillades Pêche du Jour",
+        "Matériel de Pêche"
+      ],
+      "ownerId": "user_agency_saloum"
+    },
+    {
+      "id": "est_agence_3",
+      "name": "Casamance Evasion & Randonnées",
+      "type": "agence",
+      "description": "Spécialiste du tourisme d'aventure solidaire en Casamance. Circuits à vélo VTT, randonnées dans les cases à impluvium et balades en kayak dans les bolongs d'Oussouye.",
+      "location": "Casamance",
+      "address": "Quartier Escale, Ziguinchor",
+      "status": "approved",
+      "contactEmail": "info@casamance-evasion.sn",
+      "contactPhone": "+221 33 991 33 44",
+      "rating": 4.9,
+      "reviewsCount": 35,
+      "images": [
+        "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80"
+      ],
+      "amenities": [
+        "VTT Récents Fournis",
+        "Guides Locaux Diolas",
+        "Hébergement en Campements Villageois",
+        "Assurance Rapatriement"
+      ],
+      "ownerId": "user_agency_casamance"
+    },
+    {
+      "id": "est_guide_1",
+      "name": "Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée",
+      "type": "guide",
+      "description": "Guide touristique officiel passionné par l'histoire de la Sénégambie et la culture wolof. 12 ans d'expérience dans l'accompagnement de groupes, familles et voyageurs solo à Gorée, Dakar et Saint-Louis.",
+      "location": "Dakar",
+      "address": "Dakar & Gorée (Disponible sur tout le Sénégal)",
+      "status": "approved",
+      "contactEmail": "guide_dakar@teranga.sn",
+      "contactPhone": "+221 77 654 32 10",
+      "rating": 5,
+      "reviewsCount": 58,
+      "images": [
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
+      ],
+      "amenities": [
+        "Carte Officielle Ministère du Tourisme",
+        "Français / Anglais / Wolof",
+        "Expertise Histoire & Patrimoine",
+        "Personnalisation d'Itinéraires"
+      ],
+      "ownerId": "user_guide_dakar"
+    },
+    {
+      "id": "est_guide_2",
+      "name": "Awa Sané - Guide Écotourisme & Nature Casamance",
+      "type": "guide",
+      "description": "Native d'Enampore, Awa vous emmène à la découverte des secrets de la forêt casamançaise, de la médecine traditionnelle par les plantes et des traditions mystiques du royaume d'Oussouye.",
+      "location": "Casamance",
+      "address": "Oussouye & Cap Skirring, Casamance",
+      "status": "approved",
+      "contactEmail": "awa.sane@teranga.sn",
+      "contactPhone": "+221 77 512 89 90",
+      "rating": 4.9,
+      "reviewsCount": 22,
+      "images": [
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80"
+      ],
+      "amenities": [
+        "Botanique & Ethnobotanique",
+        "Français / Wolof / Diola",
+        "Circuit Éco-Solidaire",
+        "Atelier Cuisine Traditionnelle"
+      ],
+      "ownerId": "user_guide_awa"
+    }
+  ],
+  "offers": [
+    {
+      "id": "off_1",
+      "establishmentId": "est_1",
+      "title": "Suite Junior Vue Océan & Balcon Private",
+      "description": "Superbe suite climatisée avec lit King Size, salle de bain en marbre local, coin salon et vaste balcon privé offrant une vue panoramique directe sur le coucher de soleil des Almadies.",
+      "price": 65000,
+      "quantity": 4,
+      "capacity": 2,
+      "images": [
+        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "Petit Déjeuner Buffet Inclus",
+        "Accès Spa & Hammam",
+        "Cocktail de Bienvenue Au Bissap",
+        "Wifi Premium Direct line"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_2",
+      "establishmentId": "est_1",
+      "title": "Chambre Deluxe Jardin Tropical",
+      "description": "Chambre cocon au calme donnant sur les bougainvilliers du jardin intérieur. Décoration soignée mêlant bois de teck et tissus africains contemporains.",
+      "price": 45000,
+      "quantity": 8,
+      "capacity": 2,
+      "images": [
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "Petit Déjeuner Inclus",
+        "Piscine Accessible 24/7",
+        "Machine à Café Espresso"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_3",
+      "establishmentId": "est_2",
+      "title": "Bungalow Traditionnel Sur Pilotis (Eco-lodge)",
+      "description": "Bungalow individuel construit en paille de typha et bois flotté avec terrasse au-dessus de l'eau. Endormez-vous au doux clapotis des bolongs et réveillez-vous au chant des martins-pêcheurs.",
+      "price": 35000,
+      "quantity": 6,
+      "capacity": 3,
+      "images": [
+        "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "Demi-Pension (Dîner du Soir & Petit Déjeuner)",
+        "Balade en Pirogue Découverte (1h)",
+        "Électricité Solaire 220V"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_4",
+      "establishmentId": "est_3",
+      "title": "Chambre Historique \"Maison Coloniale\"",
+      "description": "Chambre de charme aux hauts plafonds et parquets en bois ancien. Fenêtres ouvrant sur le jardin ombragé de la cour intérieure de Gorée.",
+      "price": 38000,
+      "quantity": 3,
+      "capacity": 2,
+      "images": [
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "Petit Déjeuner Gourmand",
+        "Thé à la Menthe & Jus Frais à Volonté",
+        "Billet de Chaloupe Assistance"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_ag1_1",
+      "establishmentId": "est_agence_1",
+      "title": "Circuit \"Journée Histoire & Culture\" : Gorée & Dakar Vibrant",
+      "description": "Une journée d'immersion complète guidée : traversée en chaloupe pour Gorée, visite guidée de la Maison des Esclaves, déjeuner traditionnel de Thiéboudienne face à la mer, puis tour de ville de Dakar (Monument de la Renaissance, Marché Soumbédioune, Almadies).",
+      "price": 35000,
+      "quantity": 10,
+      "capacity": 15,
+      "images": [
+        "https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "Billets Chaloupe Aller-Retour",
+        "Guide Historien Agréé",
+        "Déjeuner Complet + Boisson Local",
+        "Transport Privé Climatisé"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_ag1_2",
+      "establishmentId": "est_agence_1",
+      "title": "Stage Surf & Escapade Artistique à l'Île de Ngor",
+      "description": "Journée tonique comprenant un cours de surf de 2h sur la presqu'île des Almadies avec moniteur diplômé, matériel fourni, suivi d'une traversée en pirogue vers l'île de Ngor pour une visite des ateliers d'artistes et un déjeuner poisson grillé.",
+      "price": 28000,
+      "quantity": 8,
+      "capacity": 8,
+      "images": [
+        "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "Planche & Combinaison Fournies",
+        "Moniteur de Surf Certifié",
+        "Traversée Pirogue Ngor",
+        "Photos Souvenirs de la Session"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_ag2_1",
+      "establishmentId": "est_agence_2",
+      "title": "Excursion Pirogue Bolongs & Île aux Coquillages de Fadiouth",
+      "description": "Au départ de Ndangane ou Toubacouta, glissez en pirogue silencieuse au cœur de la mangrove. Observation des flamants roses et hérons, puis escale à Joal-Fadiouth pour visiter l'île bâtie sur des coquillages et son cimetière mixte unique.",
+      "price": 25000,
+      "quantity": 5,
+      "capacity": 12,
+      "images": [
+        "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "Pirogue Traditionnelle & Piroguier Guide",
+        "Jumelles d'Observation d'Oiseaux",
+        "Déjeuner Grillades Pêche du Jour",
+        "Droit d'Entrée Fadiouth"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_ag3_1",
+      "establishmentId": "est_agence_3",
+      "title": "Randonnée VTT & Nuit en Case à Impluvium d'Enampore (2 jours / 1 nuit)",
+      "description": "Circuit aventure éco-responsable à vélo à travers les pistes ocre de Casamance. Traversez des forêts de fromagers géants, découvrez le village d'Enampore et dormez dans une case à impluvium traditionnelle avec dîner au feu de bois.",
+      "price": 55000,
+      "quantity": 4,
+      "capacity": 10,
+      "images": [
+        "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80"
+      ],
+      "services": [
+        "VTT Tout-Terrain & Casque",
+        "Guide Accompanateur Diola",
+        "Nuitée en Case Traditionnelle",
+        "Tous les Repas du Circuit (Caldou/Yassa)"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_guide1_1",
+      "establishmentId": "est_guide_1",
+      "title": "Accompagnement Guide Privé à la Journée (Dakar / Gorée / Lac Rose)",
+      "description": "Service d'accompagnement sur mesure par Abdoulaye Ndiaye. Conception personnalisée de votre itinéraire de la journée selon vos centres d'intérêt (art, histoire, gastronomie, marchés).",
+      "price": 20000,
+      "quantity": 1,
+      "capacity": 6,
+      "images": [
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
+      ],
+      "services": [
+        "Guide Exclusif pour Votre Groupe",
+        "Conseils & Négociations Marchés",
+        "Explications Historiques Approfondies"
+      ],
+      "status": "approved"
+    },
+    {
+      "id": "off_guide2_1",
+      "establishmentId": "est_guide_2",
+      "title": "Journée Immersion Botanique & Culturelle en Casamance",
+      "description": "Une journée immersive avec Awa Sané à Oussouye. Visite du village, initiation aux plantes médicinales de la forêt sacrée, rencontre respectueuse autour des traditions locales et atelier cuisine Yassa.",
+      "price": 18000,
+      "quantity": 1,
+      "capacity": 6,
+      "images": [
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80"
+      ],
+      "services": [
+        "Guide Femme Locale Diola",
+        "Dégustation Jus de Fruits Sauvages",
+        "Atelier Cuisine & Repas Partagé"
+      ],
+      "status": "approved"
+    }
+  ],
+  "bookings": [],
+  "reviews": [
+    {
+      "id": "rev_1",
+      "establishmentId": "est_1",
+      "touristName": "Marie & Thomas (France)",
+      "rating": 5,
+      "comment": "Un séjour inoubliable ! Le personnel est d'une gentillesse rare, la piscine avec vue sur le coucher de soleil est magique. Nous avons adoré la cuisine au restaurant.",
+      "createdAt": "2025-02-10"
+    },
+    {
+      "id": "rev_2",
+      "establishmentId": "est_1",
+      "touristName": "Ibrahima K. (Sénégal)",
+      "rating": 4,
+      "comment": "Très bel établissement aux Almadies. Idéal pour un week-end de détente au calme tout en restant à Dakar. Chambre très propre.",
+      "createdAt": "2025-01-28"
+    },
+    {
+      "id": "rev_3",
+      "establishmentId": "est_2",
+      "touristName": "Sophie L. (Belgique)",
+      "rating": 5,
+      "comment": "Un véritable paradis pour les amoureux de nature. Se réveiller dans un bungalow sur l'eau avec le chant des oiseaux n'a pas de prix. Mention spéciale pour le capitaine de pirogue !",
+      "createdAt": "2025-02-14"
+    },
+    {
+      "id": "rev_4",
+      "establishmentId": "est_agence_1",
+      "touristName": "David & Clara (Suisse)",
+      "rating": 5,
+      "comment": "Excursion à Gorée fantastique avec Dakar Teranga Tours ! Le guide historien connaissait chaque pierre de l'île. Le déjeuner au bord de l'eau était succulent.",
+      "createdAt": "2025-02-18"
+    },
+    {
+      "id": "rev_5",
+      "establishmentId": "est_guide_1",
+      "touristName": "Antoine M. (Canada)",
+      "rating": 5,
+      "comment": "Ousmane est le meilleur guide qu'on puisse espérer au Sénégal ! Passionné, prévenant et d'une culture immense. Il nous a fait découvrir des endroits secrets de Dakar.",
+      "createdAt": "2025-02-01"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg_1",
+      "senderId": "user_prof_dakar",
+      "senderName": "Cheikh Ndiaye (Hôtel Teranga Dakar)",
+      "senderEmail": "professional@teranga.sn",
+      "senderRole": "professional",
+      "recipientId": "user_tourist_1",
+      "recipientName": "Fatou Diop",
+      "recipientEmail": "tourist@teranga.sn",
+      "content": "Bonjour Fatou ! Bienvenue sur la plateforme Teranga Travel. N’hésitez pas à me poser vos questions sur vos séjours à Dakar.",
+      "createdAt": "2026-10-02T12:06:50.249Z",
+      "read": true
+    },
+    {
+      "id": "msg_2",
+      "senderId": "user_agency_casamance",
+      "senderName": "Lamine Sané (Ecovoyages Casamance)",
+      "senderEmail": "agency_casamance@teranga.sn",
+      "senderRole": "professional",
+      "recipientId": "user_tourist_1",
+      "recipientName": "Fatou Diop",
+      "recipientEmail": "tourist@teranga.sn",
+      "content": "Dalal Ak Jamm Fatou ! Nos pirogues traditionnelles en Casamance sont disponibles pour votre prochain circuit.",
+      "createdAt": "2026-10-02T12:06:50.249Z",
+      "read": false
+    }
+  ],
+  "communities": [
+    {
+      "id": "comm_casamance",
+      "name": "Casamance",
+      "region": "Région Sud (Ziguinchor & Oussouye)",
+      "description": "Partagez vos séjours en Casamance : conseils sur les pirogues, campements sous les fromagers, plages de sable fin et coutumes royales d'Oussouye.",
+      "coverImage": "https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 5,
+      "createdAt": "2025-01-01"
+    },
+    {
+      "id": "comm_dakar",
+      "name": "Dakar",
+      "region": "Presqu'île du Cap-Vert",
+      "description": "Espace d'échange sur la capitale : bons plans galeries d'art, spots de surf des Almadies, traversées vers Ngor et marchés artisanaux.",
+      "coverImage": "https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 6,
+      "createdAt": "2025-01-01"
+    },
+    {
+      "id": "comm_stlouis",
+      "name": "Saint-Louis",
+      "region": "Nord Sénégal",
+      "description": "Découvrez l'ambiance coloniale, le pont Faidherbe, la Langue de Barbarie et le festival de Jazz de Saint-Louis à travers les yeux des membres.",
+      "coverImage": "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 4,
+      "createdAt": "2025-01-01"
+    },
+    {
+      "id": "comm_saloum",
+      "name": "Sine Saloum",
+      "region": "Région des Îles & Mangroves",
+      "description": "Tout sur les excursions en pirogue dans les bolongs, les îles aux coquillages de Fadiouth, la pêche responsable et l'observation d'oiseaux.",
+      "coverImage": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 4,
+      "createdAt": "2025-01-01"
+    },
+    {
+      "id": "comm_kedougou",
+      "name": "Kédougou",
+      "region": "Sénégal Oriental",
+      "description": "Aventures en Pays Bassari et Bedik, randonnées vers la cascade de Dindéfélo et immersion au cœur du patrimoine naturel.",
+      "coverImage": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 3,
+      "createdAt": "2025-01-01"
+    },
+    {
+      "id": "comm_cap_skirring",
+      "name": "Cap Skirring",
+      "region": "Littoral de Casamance",
+      "description": "La destination plage par excellence : conseils cocotiers, cours de surf, restaurants de fruits de mer frais et détente absolue.",
+      "coverImage": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 3,
+      "createdAt": "2025-01-02"
+    },
+    {
+      "id": "comm_goree",
+      "name": "Île de Gorée",
+      "region": "Baie de Dakar",
+      "description": "Partages de visites historiques sur l'île mémoire, galeries de peintres sous les bougainvilliers et nuits paisibles loin des voitures.",
+      "coverImage": "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 3,
+      "createdAt": "2025-01-02"
+    },
+    {
+      "id": "comm_lac_rose",
+      "name": "Lac Rose",
+      "region": "Région de Thiès",
+      "description": "Informations en direct sur le Lac Retba, traversées en pirogue avec les ramasseurs de sel et circuits quad dans les dunes.",
+      "coverImage": "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 2,
+      "createdAt": "2025-01-03"
+    },
+    {
+      "id": "comm_niokolo_koba",
+      "name": "Parc National du Niokolo-Koba",
+      "region": "Sénégal Oriental",
+      "description": "Communauté des passionnés de faune africaine : safaris, lions, hippopotames et bivouacs sauvages guidés.",
+      "coverImage": "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=80",
+      "active": true,
+      "postsCount": 2,
+      "createdAt": "2025-01-04"
+    }
+  ],
+  "communityPosts": [
+    {
+      "id": "post_1",
+      "communityId": "comm_casamance",
+      "destination": "Casamance",
+      "authorId": "user_tourist_1",
+      "authorName": "Fatou Diop",
+      "authorRole": "tourist",
+      "title": "5 jours inoubliables à Cap Skirring et Oussouye",
+      "content": "Nous avons passé cinq jours fabuleux à Cap Skirring. Les plages bordées de cocotiers étaient désertes au matin et le campement villageois d'Elinkine était chaleureux. Un conseil : prenez le temps de vous arrêter à Oussouye pour découvrir les traditions artisanales de vannerie et respecter la forêt sacrée.",
+      "category": "retours_experience",
+      "imageUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+      "locationSpot": "Plage de Cap Skirring & Oussouye",
+      "likesCount": 18,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-12T10:30:00Z"
+    },
+    {
+      "id": "post_2",
+      "communityId": "comm_casamance",
+      "destination": "Casamance",
+      "authorId": "user_guide_dakar",
+      "authorName": "Abdoulaye Ndiaye",
+      "authorRole": "professional",
+      "title": "Conseil budget & transport pour rejoindre la Casamance",
+      "content": "Pour les voyageurs souhaitant visiter la Casamance depuis Dakar, la liaison en ferry Aline Sitoé Diatta reste une expérience poétique et très confortable. Pensez à réserver vos cabines 2 à 3 semaines à l'avance en haute saison (décembre à avril). Pour les plus pressés, le vol Dakar-Ziguinchor dure 45 min.",
+      "category": "conseils",
+      "locationSpot": "Port de Ziguinchor & Ferry Aline Sitoé",
+      "likesCount": 24,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-14T14:15:00Z"
+    },
+    {
+      "id": "post_3",
+      "communityId": "comm_casamance",
+      "destination": "Casamance",
+      "authorId": "user_tourist_2",
+      "authorName": "Sébastien L.",
+      "authorRole": "tourist",
+      "title": "Quel guide choisir pour visiter l'île de Karabane ?",
+      "content": "Bonjour à la communauté ! Nous prévoyons une escapade de 2 jours sur l'île de Karabane depuis Elinkine. Avez-vous des recommandations pour la pirogue et le meilleur campement historique sur place ? Merci d'avance !",
+      "category": "questions",
+      "locationSpot": "Île de Karabane",
+      "likesCount": 7,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-16T09:00:00Z"
+    },
+    {
+      "id": "post_4",
+      "communityId": "comm_casamance",
+      "destination": "Casamance",
+      "authorId": "user_agency_casamance",
+      "authorName": "Lamine Sané (Ecovoyages)",
+      "authorRole": "professional",
+      "title": "Bonne adresse : Le petit resto Tante Mariama à Ziguinchor",
+      "content": "Avis aux gourmands de passage au port ! Allez tester la soupe de poisson frais et le capitaine grillé avec jus de calicedrat chez Tante Mariama. C'est frais, authentique et préparé avec les poissons du jour débarqués des pirogues.",
+      "category": "bonnes_adresses",
+      "imageUrl": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+      "locationSpot": "Port de Pêche de Ziguinchor",
+      "likesCount": 31,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-17T18:45:00Z"
+    },
+    {
+      "id": "post_5",
+      "communityId": "comm_dakar",
+      "destination": "Dakar",
+      "authorId": "user_tourist_1",
+      "authorName": "Fatou Diop",
+      "authorRole": "tourist",
+      "title": "Coucher de soleil féerique depuis la Pointe des Almadies",
+      "content": "Chaque soir à Dakar se termine en apothéose sur les rochers des Almadies. Déguster des crevettes grillées au piment doux avec le son des vagues de l'Atlantique est un incontournable de la vie dakaroise.",
+      "category": "photos",
+      "imageUrl": "https://images.unsplash.com/photo-1596120244118-19fa90de504c?auto=format&fit=crop&w=800&q=80",
+      "locationSpot": "Pointe des Almadies",
+      "likesCount": 42,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-10T19:20:00Z"
+    },
+    {
+      "id": "post_6",
+      "communityId": "comm_dakar",
+      "destination": "Dakar",
+      "authorId": "user_prof_dakar",
+      "authorName": "Cheikh Ndiaye",
+      "authorRole": "professional",
+      "title": "Astuce pour prendre la chaloupe de Gorée sans faire la queue",
+      "content": "Conseil pratique d'un habitant : achetez vos billets de chaloupe la veille au guichet du port de Dakar si vous le pouvez, ou venez dès 07h15 du matin. Vous profiterez d'une Gorée paisible sans aucun groupe avant 10h !",
+      "category": "conseils",
+      "locationSpot": "Embarcadère de Gorée",
+      "likesCount": 39,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-11T08:10:00Z"
+    },
+    {
+      "id": "post_7",
+      "communityId": "comm_stlouis",
+      "destination": "Saint-Louis",
+      "authorId": "user_agency_stlouis",
+      "authorName": "Awa Fall",
+      "authorRole": "professional",
+      "title": "Balade nocturne en caleche à travers l'île de Ndar",
+      "content": "Saint-Louis la nuit se pare de lanternes et d'une atmosphère magique. Traverser le pont Faidherbe éclairé et écouter le jazz s'échapper des anciennes demeures coloniales est un moment magique !",
+      "category": "retours_experience",
+      "imageUrl": "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80",
+      "locationSpot": "Île de Saint-Louis & Pont Faidherbe",
+      "likesCount": 27,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-13T21:15:00Z"
+    },
+    {
+      "id": "post_8",
+      "communityId": "comm_saloum",
+      "destination": "Sine Saloum",
+      "authorId": "user_guide_saloum",
+      "authorName": "Bamba Diouf",
+      "authorRole": "professional",
+      "title": "Au cœur du cimetière de coquillages de Joal-Fadiouth",
+      "content": "Savez-vous que Fadiouth est une île entièrement bâtie sur des millénaires de coquillages accumulés ? Son cimetière mixte où chrétiens et musulmans reposent côte à côte sous les baobabs est un exemple universel de tolérance.",
+      "category": "conseils",
+      "imageUrl": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+      "locationSpot": "Île aux Coquillages de Fadiouth",
+      "likesCount": 51,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-15T11:40:00Z"
+    },
+    {
+      "id": "post_9",
+      "communityId": "comm_kedougou",
+      "destination": "Kédougou",
+      "authorId": "user_guide_kedougou",
+      "authorName": "Samba Diallo",
+      "authorRole": "professional",
+      "title": "Randonnée vers les cascades de Dindéfélo : équipements conseillés",
+      "content": "Pour visiter la grande chute de Dindéfélo (plus de 100m de haut !), prévoyez des chaussures de marche antidérapantes car les rochers près du bassin sont très glissants. L'eau fraîche de la montagne est parfaite pour se baigner après la marche.",
+      "category": "conseils",
+      "imageUrl": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80",
+      "locationSpot": "Cascade de Dindéfélo",
+      "likesCount": 33,
+      "reported": false,
+      "status": "active",
+      "createdAt": "2025-02-18T15:20:00Z"
+    }
+  ]
+}

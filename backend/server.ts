@@ -301,16 +301,51 @@ function saveDatabase(db: DatabaseSchema) {
 // API Routes
 // 1. Authentication API
 app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  const db = loadDatabase();
-  const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-  if (!user) {
-    return res.status(401).json({ error: 'Identifiants de connexion incorrects.' });
+  const { email, identifier, password } = req.body;
+  const rawId = (identifier || email || '').trim();
+  if (!rawId) {
+    return res.status(400).json({ error: 'Veuillez saisir votre identifiant ou adresse e-mail.' });
   }
 
-  // Check password or quick evaluation shortcut
+  const db = loadDatabase();
+  const lowerId = rawId.toLowerCase();
+
+  // Search user by email or username or role keyword
+  let user = db.users.find(u => u.email.toLowerCase() === lowerId);
+  if (!user) {
+    if (lowerId === 'admin' || lowerId === 'administrateur' || lowerId === 'modou') {
+      user = db.users.find(u => u.role === 'admin');
+    } else if (lowerId === 'tourist' || lowerId === 'touriste' || lowerId === 'voyageur' || lowerId === 'fatou' || lowerId === 'utilisateur') {
+      user = db.users.find(u => u.email === 'tourist@teranga.sn') || db.users.find(u => u.role === 'tourist');
+    } else if (lowerId === 'hebergeur' || lowerId === 'hotel' || lowerId === 'cheikh' || lowerId === 'hote') {
+      user = db.users.find(u => u.email === 'professional@teranga.sn');
+    } else if (lowerId === 'agency' || lowerId === 'agence' || lowerId === 'casamance' || lowerId === 'lamine') {
+      user = db.users.find(u => u.email === 'agency_casamance@teranga.sn');
+    } else if (lowerId === 'guide' || lowerId === 'abdoulaye') {
+      user = db.users.find(u => u.email === 'guide_dakar@teranga.sn');
+    } else {
+      user = db.users.find(u => u.name.toLowerCase().includes(lowerId) || u.id.toLowerCase() === lowerId);
+    }
+  }
+
+  if (!user) {
+    return res.status(401).json({ error: 'Identifiant inconnu. Utilisez par exemple "admin", "touriste", "hebergeur", "agence", "guide" ou votre e-mail.' });
+  }
+
+  // Check password or quick evaluation shortcut for demo accounts
+  const isDemoUser = user.email.toLowerCase().endsWith('@teranga.sn');
   const isMatch = user.password === password 
+    || (isDemoUser && (
+      !password || 
+      password === 'tourist' || 
+      password === 'professional' || 
+      password === 'agency' || 
+      password === 'guide' || 
+      password === 'admin' ||
+      password === 'password' ||
+      password === '123456' ||
+      password === 'test'
+    ))
     || (password === 'professional' && user.role === 'professional')
     || (password === 'agency' && (user.password === 'agency' || user.email.includes('agency')))
     || (password === 'guide' && (user.password === 'guide' || user.email.includes('guide')));
@@ -319,31 +354,156 @@ app.post('/api/auth/login', (req, res) => {
     return res.status(401).json({ error: 'Mot de passe incorrect.' });
   }
 
+  // Determine user establishment and recommended portal
+  const userEst = db.establishments.find(e => e.ownerId === user.id || e.id === user.establishmentId);
+  let recommendedPortal: 'tourist' | 'hebergeurs' | 'circuits_guides' | 'admin' = 'tourist';
+  if (user.role === 'admin') {
+    recommendedPortal = 'admin';
+  } else if (user.role === 'professional') {
+    if (userEst && ['agence', 'guide'].includes(userEst.type)) {
+      recommendedPortal = 'circuits_guides';
+    } else if (user.email.includes('agency') || user.email.includes('guide')) {
+      recommendedPortal = 'circuits_guides';
+    } else {
+      recommendedPortal = 'hebergeurs';
+    }
+  }
+
   const { password: _, ...userWithoutPassword } = user;
-  res.json({ user: userWithoutPassword });
+  res.json({ 
+    user: userWithoutPassword,
+    establishment: userEst || null,
+    recommendedPortal
+  });
 });
 
 app.post('/api/auth/register', (req, res) => {
-  const { email, password, name, role } = req.body;
+  const { email, password, name, role, userType, establishmentName, establishmentLocation } = req.body;
   const db = loadDatabase();
+
+  if (!email || !name) {
+    return res.status(400).json({ error: 'Veuillez remplir les informations requises.' });
+  }
 
   if (db.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
     return res.status(400).json({ error: 'Cette adresse e-mail est déjà utilisée.' });
   }
 
+  const effectiveRole = (role === 'admin' ? 'admin' : (role === 'professional' || userType === 'host' || userType === 'agency' || userType === 'guide') ? 'professional' : 'tourist');
+  const isProfessional = effectiveRole === 'professional';
+
+  let establishmentId: string | undefined = undefined;
+  let newEst: Establishment | undefined = undefined;
+
+  if (isProfessional) {
+    const estType = userType === 'agency' ? 'agence' : userType === 'guide' ? 'guide' : 'hotel';
+    establishmentId = `est_${Date.now()}`;
+    newEst = {
+      id: establishmentId,
+      name: establishmentName || (estType === 'guide' ? `${name} - Guide Agréé` : estType === 'agence' ? `${name} Voyages` : `Établissement ${name}`),
+      description: `Profil professionnel et prestations enregistrés sur la plateforme Teranga Travel. En attente de validation d'homologation d'État.`,
+      location: establishmentLocation || 'Dakar',
+      type: estType,
+      ownerId: `user_${Date.now()}`,
+      status: 'pending',
+      images: ['https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80'],
+      rating: 5.0,
+      amenities: ['Agrément en cours', 'Assurance Professionnelle', 'Accueil Teranga'],
+      contactEmail: email.toLowerCase(),
+      reviewsCount: 0
+    };
+    db.establishments.push(newEst);
+  }
+
   const newUser: User = {
-    id: `user_${Date.now()}`,
+    id: isProfessional && newEst ? newEst.ownerId : `user_${Date.now()}`,
     email: email.toLowerCase(),
-    password,
+    password: password || 'teranga2025',
     name,
-    role,
+    role: effectiveRole,
+    establishmentId,
+    status: isProfessional ? 'pending' : 'active'
   };
 
   db.users.push(newUser);
   saveDatabase(db);
 
+  let recommendedPortal: 'tourist' | 'hebergeurs' | 'circuits_guides' | 'admin' = 'tourist';
+  if (effectiveRole === 'admin') recommendedPortal = 'admin';
+  else if (userType === 'agency' || userType === 'guide') recommendedPortal = 'circuits_guides';
+  else if (userType === 'host' || isProfessional) recommendedPortal = 'hebergeurs';
+
   const { password: _, ...userWithoutPassword } = newUser;
-  res.status(201).json({ user: userWithoutPassword });
+  res.status(201).json({ 
+    user: userWithoutPassword,
+    establishment: newEst || null,
+    recommendedPortal,
+    message: isProfessional 
+      ? 'Votre compte professionnel a été créé avec succès et est en attente d\'agrément par l\'administrateur Teranga Travel.' 
+      : 'Compte voyageur créé avec succès !'
+  });
+});
+
+app.get('/api/auth/demo-accounts', (req, res) => {
+  const db = loadDatabase();
+  const demoAccounts = [
+    {
+      label: 'Fatou Diop',
+      roleDescription: 'Voyageur / Touriste',
+      portalLabel: 'Portail Touriste',
+      email: 'tourist@teranga.sn',
+      role: 'tourist',
+      portal: 'tourist',
+      badgeColor: 'emerald',
+      avatar: 'FD',
+      description: 'Découvrez et réservez des séjours, explorez le Sénégal'
+    },
+    {
+      label: 'Cheikh Ndiaye',
+      roleDescription: 'Hôtelier Dakar (Hôtel Teranga & Spa)',
+      portalLabel: 'Portail Hébergeurs',
+      email: 'professional@teranga.sn',
+      role: 'professional',
+      portal: 'hebergeurs',
+      badgeColor: 'emerald',
+      avatar: 'CN',
+      description: 'Gérez vos chambres, disponibilités et réservations hôtelières'
+    },
+    {
+      label: 'Lamine Sané',
+      roleDescription: 'Agence Casamance Evasion',
+      portalLabel: 'Portail Circuits & Guides',
+      email: 'agency_casamance@teranga.sn',
+      role: 'professional',
+      portal: 'circuits_guides',
+      badgeColor: 'amber',
+      avatar: 'LS',
+      description: 'Gérez vos circuits, départs et dossiers d\'inscriptions'
+    },
+    {
+      label: 'Abdoulaye Ndiaye',
+      roleDescription: 'Guide Professionnel Dakar & Gorée',
+      portalLabel: 'Portail Circuits & Guides',
+      email: 'guide_dakar@teranga.sn',
+      role: 'professional',
+      portal: 'circuits_guides',
+      badgeColor: 'amber',
+      avatar: 'AN',
+      description: 'Gérez vos prestations de guidage, tarifs et disponibilités'
+    },
+    {
+      label: 'Modou Sow',
+      roleDescription: 'Administrateur Central (SYSOP)',
+      portalLabel: 'Portail Administrateur',
+      email: 'admin@teranga.sn',
+      role: 'admin',
+      portal: 'admin',
+      badgeColor: 'blue',
+      avatar: 'MS',
+      description: 'Homologation d\'État, modération des offres et supervision'
+    }
+  ];
+  res.json(demoAccounts);
 });
 
 app.get('/api/auth/users', (req, res) => {

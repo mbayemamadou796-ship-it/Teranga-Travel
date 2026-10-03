@@ -5,12 +5,21 @@
 
 export type UserRole = 'tourist' | 'professional' | 'admin';
 
+export type PortalType = 'tourist' | 'hebergeurs' | 'circuits_guides' | 'admin';
+
+export type ProfessionalSubType = 'hotel' | 'campement' | 'maison_hotes' | 'agence' | 'guide';
+
+export type UserStatus = 'active' | 'pending' | 'suspended';
+
 export interface User {
   id: string;
   email: string;
   password?: string;
   name: string;
   role: UserRole;
+  userType?: 'tourist' | 'host' | 'agency' | 'guide' | 'admin';
+  subType?: ProfessionalSubType;
+  status?: UserStatus;
   establishmentId?: string; // Links a professional to their establishment
   phone?: string;
   preferredRegion?: SenegalDestination;

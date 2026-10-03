@@ -337,13 +337,13 @@ export const INITIAL_ESTABLISHMENTS: Establishment[] = [
   },
   {
     id: 'est_guide_1',
-    name: 'Ousmane Sow - Guide National Diplômé',
+    name: 'Abdoulaye Ndiaye - Guide Professionnel Dakar & Gorée',
     type: 'guide',
     description: 'Guide touristique officiel passionné par l\'histoire de la Sénégambie et la culture wolof. 12 ans d\'expérience dans l\'accompagnement de groupes, familles et voyageurs solo à Gorée, Dakar et Saint-Louis.',
     location: 'Dakar',
     address: 'Dakar & Gorée (Disponible sur tout le Sénégal)',
     status: 'approved',
-    contactEmail: 'ousmane.guide@teranga.sn',
+    contactEmail: 'guide_dakar@teranga.sn',
     contactPhone: '+221 77 654 32 10',
     rating: 5.0,
     reviewsCount: 58,
@@ -351,7 +351,7 @@ export const INITIAL_ESTABLISHMENTS: Establishment[] = [
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
     ],
     amenities: ['Carte Officielle Ministère du Tourisme', 'Français / Anglais / Wolof', 'Expertise Histoire & Patrimoine', 'Personnalisation d\'Itinéraires'],
-    ownerId: 'user_guide_ousmane'
+    ownerId: 'user_guide_dakar'
   },
   {
     id: 'est_guide_2',

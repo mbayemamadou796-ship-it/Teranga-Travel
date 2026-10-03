@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react';
 import { 
   Compass, Search, User, MapPin, Calendar, Users, Star, Coffee, Wifi, Phone, Mail, 
   Sparkles, Check, X, Shield, ChevronRight, Plus, ArrowLeft, Sun, Waves, Eye, 
-  RefreshCw, ClipboardList, Building, CheckCircle, HelpCircle, ShieldAlert, Heart, Info 
+  RefreshCw, ClipboardList, Building, CheckCircle, HelpCircle, ShieldAlert, Heart, Info,
+  LogOut, ShieldCheck, Lock
 } from 'lucide-react';
 import { SenegalDestination, Destination, Establishment, Offer, Booking, Review, User as UserType } from '../shared/types';
 import { INITIAL_DESTINATIONS } from '../backend/data';
@@ -21,10 +22,14 @@ import AdminApp from './web-admin/AdminApp';
 import CommunityModule from './components/CommunityModule';
 import { TerangaLogo } from '../shared/ui/TerangaLogo';
 import MessagingWidget from '../shared/ui/MessagingWidget';
+import AuthEntryGateway from './components/AuthEntryGateway';
+import PublicShowcase from './components/PublicShowcase';
 
 export default function App() {
-  // Navigation & Routing State
-  const [activeApp, setActiveApp] = useState<'tourist' | 'hebergeurs' | 'circuits_guides' | 'admin'>('tourist');
+  // Navigation & Routing State: Exactly 2 applications in the top bar as requested
+  const [activeApp, setActiveApp] = useState<'teranga' | 'admin'>('teranga');
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authInitialMode, setAuthInitialMode] = useState<'login' | 'register'>('login');
   const [activeTab, setActiveTab] = useState<'destinations' | 'establishments' | 'ai-planner' | 'community' | 'dashboard'>('destinations');
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
@@ -48,6 +53,8 @@ export default function App() {
   const [authPassword, setAuthPassword] = useState('');
   const [authName, setAuthName] = useState('');
   const [authRole, setAuthRole] = useState<'tourist' | 'professional'>('tourist');
+  const [authRegisterType, setAuthRegisterType] = useState<'tourist' | 'host' | 'agency' | 'guide'>('tourist');
+  const [authEstName, setAuthEstName] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
@@ -241,7 +248,14 @@ export default function App() {
     const endpoint = authTab === 'login' ? '/api/auth/login' : '/api/auth/register';
     const payload = authTab === 'login' 
       ? { email: authEmail, password: authPassword }
-      : { email: authEmail, password: authPassword, name: authName, role: authRole };
+      : { 
+          email: authEmail, 
+          password: authPassword, 
+          name: authName, 
+          role: authRegisterType === 'tourist' ? 'tourist' : 'professional',
+          userType: authRegisterType,
+          establishmentName: authEstName
+        };
 
     try {
       const response = await fetch(endpoint, {
@@ -259,6 +273,14 @@ export default function App() {
       localStorage.setItem('teranga_user', JSON.stringify(data.user));
       setAuthSuccess(authTab === 'login' ? 'Connexion réussie !' : 'Inscription réussie !');
       
+      if (data.user.role === 'admin' && data.recommendedPortal === 'admin') {
+        setActiveApp('admin');
+      } else {
+        setActiveApp('teranga');
+      }
+
+      await fetchEstablishments();
+
       // Clean forms
       setAuthEmail('');
       setAuthPassword('');
@@ -272,24 +294,35 @@ export default function App() {
     localStorage.removeItem('teranga_user');
     setCurrentUser(null);
     setUserBookings([]);
+    setActiveApp('teranga');
+    setIsAuthOpen(false);
     setAuthSuccess(null);
   };
 
   // Direct Login Shortcuts for Quick Evaluation
-  const handleDirectLogin = async (email: string, pass: string) => {
+  const handleDirectLogin = async (emailOrId: string, pass: string) => {
     setAuthError(null);
     setAuthSuccess(null);
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass }),
+        body: JSON.stringify({ identifier: emailOrId, password: pass }),
       });
       const data = await response.json();
       if (response.ok) {
         setCurrentUser(data.user);
         localStorage.setItem('teranga_user', JSON.stringify(data.user));
-        setAuthSuccess('Connexion en tant que compte de test réussie !');
+        setAuthSuccess('Connexion réussie !');
+        setIsAuthOpen(false);
+        
+        if (data.user.role === 'admin' && data.recommendedPortal === 'admin') {
+          setActiveApp('admin');
+        } else {
+          setActiveApp('teranga');
+        }
+
+        await fetchEstablishments();
       } else {
         throw new Error(data.error);
       }
@@ -433,6 +466,79 @@ export default function App() {
 
   const proEstablishment = establishments.find(e => e.id === currentUser?.establishmentId);
 
+  // Vitrine publique avant connexion (architecture Teranga Travel : consultation libre avant authentification)
+  if (!currentUser) {
+    if (isAuthOpen) {
+      return (
+        <AuthEntryGateway
+          initialMode={authInitialMode}
+          onClose={() => setIsAuthOpen(false)}
+          onLoginSuccess={(user, recommendedPortal) => {
+            setCurrentUser(user);
+            localStorage.setItem('teranga_user', JSON.stringify(user));
+            setIsAuthOpen(false);
+            if (user.role === 'admin' && recommendedPortal === 'admin') {
+              setActiveApp('admin');
+            } else {
+              setActiveApp('teranga');
+            }
+            fetchEstablishments();
+          }}
+        />
+      );
+    }
+
+    return (
+      <PublicShowcase
+        destinations={INITIAL_DESTINATIONS}
+        establishments={establishments}
+        onOpenAuth={(mode) => {
+          setAuthInitialMode(mode || 'login');
+          setIsAuthOpen(true);
+        }}
+        onSelectEstablishment={(est) => {
+          setSelectedEstablishment(est);
+          setAuthInitialMode('login');
+          setIsAuthOpen(true);
+        }}
+        onSelectOfferBooking={(offer, est) => {
+          setBookingOffer(offer);
+          setSelectedEstablishment(est);
+          setAuthInitialMode('login');
+          setIsAuthOpen(true);
+        }}
+      />
+    );
+  }
+
+  // 2. Identify professional category for Teranga Travel portal
+  const isCircuitsGuideUser = Boolean(
+    currentUser.role === 'professional' && (
+      currentUser.establishmentId === 'est_agence_1' ||
+      currentUser.establishmentId === 'est_agence_2' ||
+      currentUser.establishmentId === 'est_agence_3' ||
+      currentUser.establishmentId === 'est_agence_4' ||
+      currentUser.establishmentId === 'est_agence_5' ||
+      currentUser.establishmentId === 'est_guide_1' ||
+      currentUser.establishmentId === 'est_guide_2' ||
+      currentUser.establishmentId === 'est_guide_3' ||
+      currentUser.establishmentId?.includes('agence') ||
+      currentUser.establishmentId?.includes('guide') ||
+      currentUser.email?.includes('agency') ||
+      currentUser.email?.includes('guide') ||
+      currentUser.subType === 'agence' ||
+      currentUser.subType === 'guide' ||
+      establishments.some(e => 
+        (e.ownerId === currentUser.id || e.id === currentUser.establishmentId) && 
+        ['agence', 'guide'].includes(e.type)
+      )
+    )
+  );
+
+  const isHostUser = Boolean(
+    currentUser.role === 'professional' && !isCircuitsGuideUser
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-800 antialiased">
       
@@ -443,65 +549,82 @@ export default function App() {
         <div className="flex-1 bg-red-600" />
       </div>
 
-      {/* Ecosystem Portals Navigation Switcher */}
-      <div className="bg-slate-900 border-b border-slate-800 text-white py-3 px-4 z-50">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-[10px] bg-slate-800 text-slate-200 font-bold px-2.5 py-1 rounded-md uppercase tracking-wider border border-slate-700">
-              Écosystème Teranga Travel
-            </span>
-            <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">
-              Sélectionnez l'application web métier :
-            </span>
-          </div>
+      {/* Ecosystem Top Navigation Bar - Exactly 2 Applications as requested */}
+      <div className="bg-[#0f172a] border-b border-slate-800 text-white py-2.5 px-4 z-50 sticky top-0 shadow-md">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+          
+          {/* Left: EXACTLY TWO APPLICATIONS */}
+          <div className="flex items-center gap-1.5">
+            {/* Application 1: Teranga Travel */}
+            <button
+              onClick={() => {
+                setActiveApp('teranga');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeApp === 'teranga'
+                  ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/50'
+                  : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <span>🌍</span>
+              <span className="font-extrabold tracking-tight">Teranga Travel</span>
+            </button>
 
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            <button
-              onClick={() => setActiveApp('tourist')}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeApp === 'tourist'
-                  ? 'bg-emerald-700 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
-              }`}
-            >
-              <span>🌍 App Voyageur / Touriste</span>
-            </button>
-            <button
-              onClick={() => setActiveApp('hebergeurs')}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeApp === 'hebergeurs'
-                  ? 'bg-emerald-700 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
-              }`}
-            >
-              <span>🏨 App Hébergeurs</span>
-            </button>
-            <button
-              onClick={() => setActiveApp('circuits_guides')}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeApp === 'circuits_guides'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
-              }`}
-            >
-              <span>🥾 App Circuits & Guides</span>
-            </button>
+            {/* Application 2: Application Admin */}
             <button
               onClick={() => setActiveApp('admin')}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeApp === 'admin'
-                  ? 'bg-slate-100 text-slate-900 shadow-sm'
-                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+                  ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/50'
+                  : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
-              <span>🛡️ App Administrateur</span>
+              <span>🛡️</span>
+              <span className="font-extrabold tracking-tight">Application Admin</span>
             </button>
           </div>
+
+          {/* Right: Connected User Status + Quick Demo Personas (1-clic) + Déconnexion */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Connected User Badge */}
+            <div className="flex items-center gap-2 bg-slate-800/90 px-2.5 py-1 rounded-xl border border-slate-700/80">
+              <div className="w-5 h-5 rounded-full bg-emerald-500 text-white font-bold text-[10px] flex items-center justify-center uppercase">
+                {currentUser.name.charAt(0)}
+              </div>
+              <div className="text-left leading-none">
+                <span className="text-[11px] font-bold text-white mr-1.5">{currentUser.name}</span>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+                  currentUser.role === 'admin'
+                    ? 'bg-blue-900/80 text-blue-300 border border-blue-700/60'
+                    : currentUser.role === 'professional'
+                      ? (isCircuitsGuideUser ? 'bg-amber-900/80 text-amber-300 border border-amber-700/60' : 'bg-emerald-900/80 text-emerald-300 border border-emerald-700/60')
+                      : 'bg-slate-700 text-slate-300 border border-slate-600'
+                }`}>
+                  {currentUser.role === 'admin'
+                    ? 'Administrateur'
+                    : currentUser.role === 'professional'
+                      ? (isCircuitsGuideUser ? 'Agence / Guide' : 'Hébergeur')
+                      : 'Voyageur'}
+                </span>
+              </div>
+            </div>
+
+            {/* Déconnexion button returns to Entry Gateway */}
+            <button
+              onClick={handleLogout}
+              title="Se déconnecter et retourner à l'écran d'accueil d'authentification"
+              className="text-[10px] text-rose-300 hover:text-white bg-rose-950/60 hover:bg-rose-900 px-2.5 py-1 rounded-lg border border-rose-800/50 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <LogOut size={12} />
+              <span>Déconnexion</span>
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* Primary Header */}
-      {activeApp === 'tourist' && (
+      {/* Primary Header for Travelers and Admins */}
+      {activeApp === 'teranga' && (currentUser.role === 'tourist' || currentUser.role === 'admin') && (
         <header className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-gray-100 z-40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           
@@ -563,7 +686,7 @@ export default function App() {
                 >
                   <span className="text-xs font-bold text-gray-900 leading-none">{currentUser.name}</span>
                   <span className="text-[9px] text-gray-500 font-medium capitalize mt-1">
-                    {currentUser.role === 'admin' ? 'Administrateur' : currentUser.role === 'professional' ? 'Professionnel' : 'Voyageur'}
+                    {currentUser.role === 'admin' ? 'Administrateur' : (currentUser.role as any) === 'professional' ? 'Professionnel' : 'Voyageur'}
                   </span>
                 </button>
                 <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center font-bold text-xs text-emerald-800 uppercase">
@@ -627,34 +750,71 @@ export default function App() {
       {/* Primary Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         
-        {activeApp === 'hebergeurs' && (
-          <HostApp 
-            currentUser={currentUser} 
-            establishments={establishments} 
-            onRefreshData={fetchEstablishments} 
-            onDirectLogin={handleDirectLogin}
-          />
-        )}
-
-        {activeApp === 'circuits_guides' && (
-          <CircuitsApp 
-            currentUser={currentUser} 
-            establishments={establishments} 
-            onRefreshData={fetchEstablishments} 
-            onDirectLogin={handleDirectLogin}
-          />
-        )}
-
+        {/* APPLICATION 2: ADMIN */}
         {activeApp === 'admin' && (
-          <AdminApp 
-            currentUser={currentUser} 
-            establishments={establishments} 
-            onRefreshData={fetchEstablishments} 
-            onDirectLogin={handleDirectLogin}
-          />
+          currentUser.role === 'admin' ? (
+            <AdminApp 
+              currentUser={currentUser} 
+              establishments={establishments} 
+              onRefreshData={fetchEstablishments} 
+              onDirectLogin={handleDirectLogin}
+            />
+          ) : (
+            <div className="max-w-2xl mx-auto py-12 px-4 animate-fade-in text-center space-y-6">
+              <div className="w-20 h-20 bg-rose-100 rounded-3xl flex items-center justify-center mx-auto text-rose-600 shadow-md">
+                <ShieldAlert size={40} />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Accès Réservé à l'Administration
+                </h2>
+                <p className="text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
+                  L'application de supervision est réservée aux administrateurs autorisés (validation des hébergements, gestion des comptes professionnels et modération).
+                </p>
+                <div className="text-xs text-gray-500 bg-gray-100 py-2 px-3 rounded-xl inline-block font-mono">
+                  Compte connecté : <b>{currentUser.name}</b> ({currentUser.role === 'professional' ? (isCircuitsGuideUser ? 'Agence / Guide' : 'Hébergeur') : 'Voyageur'})
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+                <button
+                  onClick={() => handleDirectLogin('admin@teranga.sn', 'admin')}
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <ShieldCheck size={16} />
+                  <span>Se connecter en tant qu'Administrateur (Modou Sow)</span>
+                </button>
+                <button
+                  onClick={() => setActiveApp('teranga')}
+                  className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-2xl text-xs font-bold cursor-pointer transition-all"
+                >
+                  <span>Retourner à Teranga Travel</span>
+                </button>
+              </div>
+            </div>
+          )
         )}
 
-        {activeApp === 'tourist' && (
+        {/* APPLICATION 1: TERANGA TRAVEL - Dynamic interface based on authenticated user */}
+        {activeApp === 'teranga' && currentUser.role === 'professional' && (
+          isCircuitsGuideUser ? (
+            <CircuitsApp 
+              currentUser={currentUser} 
+              establishments={establishments} 
+              onRefreshData={fetchEstablishments} 
+              onDirectLogin={handleDirectLogin}
+            />
+          ) : (
+            <HostApp 
+              currentUser={currentUser} 
+              establishments={establishments} 
+              onRefreshData={fetchEstablishments} 
+              onDirectLogin={handleDirectLogin}
+            />
+          )
+        )}
+
+        {activeApp === 'teranga' && (currentUser.role === 'tourist' || currentUser.role === 'admin') && (
           <>
             {/* ==================== TAB 1: DESTINATIONS ==================== */}
         {activeTab === 'destinations' && (
@@ -1332,29 +1492,64 @@ export default function App() {
                     <p className="text-[10px] text-amber-900 leading-snug">
                       Cliquez ci-dessous pour vous connecter instantanément à l'un de nos profils préconfigurés afin d'évaluer tous les aspects de la plateforme :
                     </p>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-1 gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleDirectLogin('tourist@teranga.sn', 'tourist')}
-                        className="bg-white hover:bg-emerald-50 text-emerald-800 text-[10px] font-semibold py-2 px-3 rounded-xl border border-emerald-200/80 transition-all text-left flex justify-between items-center cursor-pointer"
+                        className="bg-white hover:bg-emerald-50 text-emerald-800 text-[10px] font-semibold py-2 px-3 rounded-xl border border-emerald-200/80 transition-all text-left flex justify-between items-center cursor-pointer shadow-xs"
                       >
-                        <span>👤 Voyageur (Fatou Diop)</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span>👤 <b>Fatou Diop</b> — Voyageur (web-tourist)</span>
+                        </span>
                         <ChevronRight size={12} />
                       </button>
+                      
                       <button
                         type="button"
                         onClick={() => handleDirectLogin('professional@teranga.sn', 'professional')}
-                        className="bg-white hover:bg-amber-50 text-amber-800 text-[10px] font-semibold py-2 px-3 rounded-xl border border-amber-200/80 transition-all text-left flex justify-between items-center cursor-pointer"
+                        className="bg-white hover:bg-emerald-50 text-emerald-900 text-[10px] font-semibold py-2 px-3 rounded-xl border border-emerald-200/80 transition-all text-left flex justify-between items-center cursor-pointer shadow-xs"
                       >
-                        <span>🏠 Hôtelier Dakar (Cheikh Ndiaye)</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-700"></span>
+                          <span>🏨 <b>Cheikh Ndiaye</b> — Hébergeur Dakar (web-host)</span>
+                        </span>
                         <ChevronRight size={12} />
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDirectLogin('agency_casamance@teranga.sn', 'agency')}
+                        className="bg-white hover:bg-amber-50 text-amber-900 text-[10px] font-semibold py-2 px-3 rounded-xl border border-amber-300 transition-all text-left flex justify-between items-center cursor-pointer shadow-xs"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                          <span>🚀 <b>Lamine Sané</b> — Agence Casamance (web-circuits)</span>
+                        </span>
+                        <ChevronRight size={12} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDirectLogin('guide_dakar@teranga.sn', 'guide')}
+                        className="bg-white hover:bg-amber-50 text-amber-950 text-[10px] font-semibold py-2 px-3 rounded-xl border border-amber-300 transition-all text-left flex justify-between items-center cursor-pointer shadow-xs"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-amber-700"></span>
+                          <span>🧭 <b>Abdoulaye Ndiaye</b> — Guide Dakar & Gorée (web-circuits)</span>
+                        </span>
+                        <ChevronRight size={12} />
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => handleDirectLogin('admin@teranga.sn', 'admin')}
-                        className="bg-white hover:bg-red-50 text-red-800 text-[10px] font-semibold py-2 px-3 rounded-xl border border-red-200/80 transition-all text-left flex justify-between items-center cursor-pointer"
+                        className="bg-white hover:bg-blue-50 text-blue-900 text-[10px] font-semibold py-2 px-3 rounded-xl border border-blue-200 transition-all text-left flex justify-between items-center cursor-pointer shadow-xs"
                       >
-                        <span>🛡️ Administrateur (Modou Sow)</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                          <span>🛡️ <b>Modou Sow</b> — Administrateur SYSOP (web-admin)</span>
+                        </span>
                         <ChevronRight size={12} />
                       </button>
                     </div>
@@ -1414,32 +1609,117 @@ export default function App() {
                         </div>
 
                         {/* Role selection */}
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Type de Profil</label>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Type de Profil & Portail Métier</label>
                           <div className="grid grid-cols-2 gap-2 pt-1">
                             <button
                               type="button"
-                              onClick={() => setAuthRole('tourist')}
-                              className={`p-2.5 rounded-xl text-center border text-xs font-medium transition-all cursor-pointer ${
-                                authRole === 'tourist' 
-                                  ? 'bg-emerald-50 border-emerald-500 text-emerald-800' 
-                                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                              onClick={() => {
+                                setAuthRole('tourist');
+                                setAuthRegisterType('tourist');
+                              }}
+                              className={`p-2.5 rounded-xl text-left border text-xs font-medium transition-all cursor-pointer ${
+                                authRegisterType === 'tourist' 
+                                  ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold shadow-xs' 
+                                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                               }`}
                             >
-                              👤 Voyageur / Touriste
+                              <div className="flex items-center gap-1.5">
+                                <span>👤</span>
+                                <div>
+                                  <div className="text-[11px]">Voyageur / Touriste</div>
+                                  <div className="text-[9px] text-emerald-600 font-normal">Accès instantané</div>
+                                </div>
+                              </div>
                             </button>
+
                             <button
                               type="button"
-                              onClick={() => setAuthRole('professional')}
-                              className={`p-2.5 rounded-xl text-center border text-xs font-medium transition-all cursor-pointer ${
-                                authRole === 'professional' 
-                                  ? 'bg-amber-50 border-amber-500 text-amber-800' 
-                                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                              onClick={() => {
+                                setAuthRole('professional');
+                                setAuthRegisterType('host');
+                              }}
+                              className={`p-2.5 rounded-xl text-left border text-xs font-medium transition-all cursor-pointer ${
+                                authRegisterType === 'host' 
+                                  ? 'bg-emerald-50 border-emerald-600 text-emerald-900 font-bold shadow-xs' 
+                                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                               }`}
                             >
-                              🏠 Hôtelier / Professionnel
+                              <div className="flex items-center gap-1.5">
+                                <span>🏨</span>
+                                <div>
+                                  <div className="text-[11px]">Hébergeur / Hôtel</div>
+                                  <div className="text-[9px] text-gray-400 font-normal">Agrément d'État</div>
+                                </div>
+                              </div>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAuthRole('professional');
+                                setAuthRegisterType('agency');
+                              }}
+                              className={`p-2.5 rounded-xl text-left border text-xs font-medium transition-all cursor-pointer ${
+                                authRegisterType === 'agency' 
+                                  ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-xs' 
+                                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <span>🚀</span>
+                                <div>
+                                  <div className="text-[11px]">Agence de Voyage</div>
+                                  <div className="text-[9px] text-amber-700 font-normal">Gestion de circuits</div>
+                                </div>
+                              </div>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAuthRole('professional');
+                                setAuthRegisterType('guide');
+                              }}
+                              className={`p-2.5 rounded-xl text-left border text-xs font-medium transition-all cursor-pointer ${
+                                authRegisterType === 'guide' 
+                                  ? 'bg-amber-50 border-amber-600 text-amber-950 font-bold shadow-xs' 
+                                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <span>🧭</span>
+                                <div>
+                                  <div className="text-[11px]">Guide Touristique</div>
+                                  <div className="text-[9px] text-amber-800 font-normal">Guide officiel agréé</div>
+                                </div>
+                              </div>
                             </button>
                           </div>
+
+                          {authRegisterType !== 'tourist' && (
+                            <div className="pt-2 space-y-2">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                  {authRegisterType === 'host' ? 'Nom de votre établissement (Hôtel, Campement, Lodge)' : authRegisterType === 'agency' ? 'Nom de votre agence de voyage réceptive' : 'Titre / Spécialité de votre profil Guide'}
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder={authRegisterType === 'host' ? 'Ex. Campement Solidaire de Niafrang' : authRegisterType === 'agency' ? 'Ex. Sahel Aventure Circuits' : 'Ex. Guide Patrimoine Historique Gorée'}
+                                  value={authEstName}
+                                  onChange={(e) => setAuthEstName(e.target.value)}
+                                  className="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-800"
+                                />
+                              </div>
+
+                              <div className="p-2.5 bg-amber-50/70 border border-amber-200/60 rounded-xl text-[10px] text-amber-900 flex items-start gap-2">
+                                <Info size={14} className="shrink-0 text-amber-700 mt-0.5" />
+                                <span>
+                                  <b>Procédure d'agrément officiel :</b> Votre profil sera enregistré et immédiatement accessible pour paramétrer vos offres. La publication publique sur le portail voyageur s'activera dès validation par la console d'administration.
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </>
                     )}
@@ -1504,7 +1784,7 @@ export default function App() {
                     </div>
                     <div className="text-left text-xs text-emerald-900 leading-tight">
                       <p className="font-bold">Mon Profil Teranga</p>
-                      <p className="text-[10px] text-emerald-700 capitalize mt-0.5">{currentUser.role === 'admin' ? 'Administrateur' : currentUser.role === 'professional' ? 'Hôtelier Pro' : 'Voyageur'}</p>
+                      <p className="text-[10px] text-emerald-700 capitalize mt-0.5">{currentUser.role === 'admin' ? 'Administrateur' : (currentUser.role as any) === 'professional' ? 'Hôtelier Pro' : 'Voyageur'}</p>
                     </div>
                   </div>
                 </div>
@@ -1732,7 +2012,7 @@ export default function App() {
                 )}
 
                 {/* ROLE SUB-VIEW B: PROFESSIONAL DASHBOARD */}
-                {currentUser.role === 'professional' && (
+                {(currentUser.role as any) === 'professional' && (
                   <div className="space-y-8 animate-fade-in">
                     
                     {/* Check if pro has an establishment */}

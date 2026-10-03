@@ -68,10 +68,18 @@ export default function CircuitsApp({
 
   // Find the logged-in user's profile (either agency or guide)
   const myProfile = establishments.find(
-    e => e.ownerId === currentUser?.id || e.id === currentUser?.establishmentId
+    e => (currentUser?.id && e.ownerId === currentUser.id) || 
+         (currentUser?.establishmentId && e.id === currentUser.establishmentId) ||
+         (currentUser?.email && e.contactEmail?.toLowerCase() === currentUser.email.toLowerCase()) ||
+         (currentUser?.id === 'user_agency_casamance' && e.id === 'est_agence_3') ||
+         (currentUser?.id === 'user_guide_dakar' && e.id === 'est_guide_1')
   );
 
-  const isCircuitsGuidesEst = myProfile && ['agence', 'guide'].includes(myProfile.type);
+  const isCircuitsGuidesEst = (myProfile && ['agence', 'guide'].includes(myProfile.type))
+    || currentUser?.email === 'agency_casamance@teranga.sn'
+    || currentUser?.email === 'guide_dakar@teranga.sn'
+    || currentUser?.email?.includes('agency')
+    || currentUser?.email?.includes('guide');
 
   // Fetch offers & bookings for this agency/guide
   const fetchMyData = async () => {
@@ -337,18 +345,24 @@ export default function CircuitsApp({
             <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Accès d'évaluation rapide :</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
-                onClick={() => onDirectLogin('agency_casamance@teranga.sn', 'agency')}
-                className="bg-amber-600 hover:bg-amber-500 text-white font-sans font-bold py-2.5 px-3 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={async () => {
+                  await onDirectLogin('agency_casamance@teranga.sn', 'agency');
+                  await onRefreshData();
+                }}
+                className="bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-sans font-bold py-3 px-3 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
               >
-                <span>🚀 Agence Casamance</span>
+                <span>🚀 Agence Casamance (Lamine Sané)</span>
                 <ArrowRight size={12} />
               </button>
 
               <button
-                onClick={() => onDirectLogin('guide_dakar@teranga.sn', 'guide')}
-                className="bg-amber-800 hover:bg-amber-700 text-white font-sans font-bold py-2.5 px-3 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={async () => {
+                  await onDirectLogin('guide_dakar@teranga.sn', 'guide');
+                  await onRefreshData();
+                }}
+                className="bg-amber-800 hover:bg-amber-700 active:scale-95 text-white font-sans font-bold py-3 px-3 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
               >
-                <span>🧭 Guide Abdoulaye</span>
+                <span>🧭 Guide Abdoulaye (Dakar & Gorée)</span>
                 <ArrowRight size={12} />
               </button>
             </div>
